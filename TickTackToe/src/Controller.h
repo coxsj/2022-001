@@ -4,44 +4,44 @@
 #include <memory>
 
 #include "Player.h"
-#include "Display.h"
-#include "Game.h";
+#include "Game.h"
 
 
 class Controller
 {
 private:
-	#define MAX_PLAYERS 2
+#define MAX_PLAYERS 2
 	unsigned int				numPlayers;
 	std::unique_ptr<Player[]>	players;
-	std::unique_ptr<Display>	display;
 	std::unique_ptr<Game>		game;
 	std::string					name;
-	#define DEFAULT_NAME "new_controller"
+#define DEFAULT_NAME "new_controller"
+	bool						quit;
+	std::string					userEntry;
 public:
 
-/*
-std::unique_ptr<Base> ptr;  //points to Derived or some other derived class
+	/*
+	std::unique_ptr<Base> ptr;  //points to Derived or some other derived class
 
-//rule of five
-~Foo() = default;
-Foo(Foo const& other) : ptr(other.ptr->clone()) {}
-Foo(Foo && other) = default;
-Foo& operator=(Foo const& other) { ptr = other.ptr->clone(); return *this; }
-Foo& operator=(Foo && other) = default;
+	//rule of five
+	~Foo() = default;
+	Foo(Foo const& other) : ptr(other.ptr->clone()) {}
+	Foo(Foo && other) = default;
+	Foo& operator=(Foo const& other) { ptr = other.ptr->clone(); return *this; }
+	Foo& operator=(Foo && other) = default;
 
-*/
+	*/
 	//Constructors
-	Controller() { 
+	Controller() {
 		initController();
 		std::cout << "Controller Default constructor of "; printNameLn();
 	}
-	Controller(unsigned int players) { 
+	Controller(unsigned int players) {
 		std::cout << "Controller Default constructor with int of "; printNameLn();
-		initController(players); 
+		initController(players);
 	}
 	//Copy constructor
-	Controller(const Controller& other) { 
+	Controller(const Controller& other) {
 		initController(other.playerCount());
 		std::cout << "Controller Copy constructor from "; other.printNameLn();
 		rename(other.name + "_copy");
@@ -49,7 +49,6 @@ Foo& operator=(Foo && other) = default;
 	//Move constructor
 	Controller(Controller&& rhs) noexcept {
 		players = std::exchange(rhs.players, nullptr);
-		display = std::exchange(rhs.display, nullptr);
 		game = std::exchange(rhs.game, nullptr);
 		name = std::exchange(rhs.name, "husk(Empty and deletable)");
 		std::cout << "Controller Move constructor from "; printNameLn();
@@ -67,7 +66,6 @@ Foo& operator=(Foo && other) = default;
 		std::cout << "Swapping "; this->printName(); std::cout << "with "; rhs.printNameLn();
 		using std::swap;
 		swap(players, rhs.players);
-		swap(display, rhs.display);
 		swap(game, rhs.game);
 		swap(name, rhs.name);
 	}
@@ -79,25 +77,28 @@ Foo& operator=(Foo && other) = default;
 		//Just calls the member swap
 		a.swap(b);
 	}
+	void play();
 	unsigned int playerCount() const { return numPlayers; }
 	void printName() const {
 		if (name.size() > 0) std::cout << name << " ";
 		else std::cout << "not_named ";
 	}
 	void printNameLn() const { printName();  std::cout << std::endl; }
-	void rename( const std::string& newName) {
+	void rename(const std::string& newName) {
 		printName();
 		std::cout << "renamed to ";
 		name = newName;
 		printNameLn();
 	}
 private:
+	void getUserInput();
 	void initController(const unsigned int numP = MAX_PLAYERS) {
 		numPlayers = numP;
 		players = std::make_unique<Player[]>(numP);
-		display = std::make_unique<Display>();
 		game = std::make_unique<Game>();
 		name = std::string(DEFAULT_NAME);
+		quit = false;
+		userEntry = "";
 	}
+	void processUserInput();
 };
-
