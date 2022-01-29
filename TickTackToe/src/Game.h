@@ -74,12 +74,15 @@ public:
 	
 private:
 	void changePlayers();
+	void changeSides();
 	void clearEntries();
 	void drawGame();
 	void getGameTypeFromUser();
 	void getPostGameInputFromUser();
 	void getPlayerName(unsigned int player);
-	void getUserInput();
+	void getMoveInput();
+	void getMoveInputFromCom();
+	void getMoveInputFromHuman();
 	void initGame() {
 		//Set up entry vector
 		for (int i=0; i < GRID_CELLS; i++)

@@ -10,6 +10,16 @@ void Game::changePlayers() {
 	if (currentPlayer == PLAYER_ONES_TURN) currentPlayer = PLAYER_TWOS_TURN;
 	else currentPlayer = PLAYER_ONES_TURN;
 }
+void Game::changeSides() {
+	//Todo
+	//Implement copy constructor and copy assignment
+	//Implement move constructor and move assignment
+	//Implement swaps
+	// 
+	//Tell user what happened
+
+	//swap(player[0], player[1]);
+}
 void Game::clearEntries() {
 	for (char& c : entries)
 		c = ENTRIES_DEFAULT_CHAR;
@@ -117,10 +127,23 @@ void Game::getPostGameInputFromUser() {
 		if (std::isalpha(userEntry) || std::isdigit(userEntry)) break;
 	}
 }
-void Game::getUserInput() {
+void Game::getMoveInput() {
+	if (players[currentPlayer].isCom()) getMoveInputFromCom();
+	else getMoveInputFromHuman();
+}
+void Game::getMoveInputFromCom() {
+	for (auto i = 0; i < GRID_CELLS; i++) {
+		if (entries[i] == ENTRIES_DEFAULT_CHAR) {
+			userEntry = i + 48; //simulate key code
+			break;
+		}
+	 }
+}
+
+void Game::getMoveInputFromHuman() {
 	unsigned int inputCode;
 	while (1) {
-		printCurrentPlayerName(); std::cout <<"'s move. Enter cell number..." << std::endl;
+		printCurrentPlayerName(); std::cout << "'s move. Enter cell number..." << std::endl;
 		inputCode = _getch();
 		if (std::isalpha(inputCode) || std::isdigit(inputCode)) {
 			std::cout << inputCode << std::endl;
@@ -150,14 +173,14 @@ void Game::newGame() {
 	drawGame();
 }
 void Game::newSession() {
+	sessionState = SessionState::ACTIVE_SESSION;
 	getGameTypeFromUser();
 	//Todo load player score history if any
-	newGame();
 }
 void Game::nextMove() {
 	if (gameState != GameState::ACTIVE_GAME) return;
 	//Get input from next player
-	getUserInput();
+	getMoveInput();
 	processInput();// Evaluate if the game is won, tied or lost and sett state codes
 	//Switch players if still playing
 	changePlayers();
@@ -187,23 +210,24 @@ void Game::printGameResult() {
 	default:
 		break;
 	}
+	std::cout << std::endl;
 }
 void Game::processInput() {
 	switch (userEntry) {
 	case 'c':
 	case 'C':
-		//change session
+		//end current game, change sides
 		gameState = GameState::GAME_OVER;
-		sessionState = SessionState::SESSION_CHANGE_REQUESTED;
+		changeSides();
 		break;
 	case 'e':
 	case 'E':
-		//End current game
+		//End current game, same session
 		gameState = GameState::GAME_OVER;
 		break;
 	case 'n':
 	case 'N':
-		//new session
+		//End this game, start new session
 		gameState = GameState::GAME_OVER;
 		sessionState = SessionState::NEW_SESSION_REQESTED;
 		break;
@@ -214,10 +238,11 @@ void Game::processInput() {
 		break;
 	case 'q':
 	case 'Q':
+		//End this game, quit this session
 		gameState = GameState::GAME_OVER;
 		sessionState = SessionState::SESSION_OVER;
 		std::cout << "Game over!!\n";
-			break;
+		break;
 	case 48:
 	case 49:
 	case 50:
@@ -237,13 +262,14 @@ void Game::processInput() {
 void Game::run(){
 	while (!isSessionOver()) {
 		newSession();
-		while (!newSessionRequest()){
+		while (!newSessionRequest() && !isSessionOver()){
+			newGame();
 			while (!isGameOver()) {
 				nextMove();
 			}
 			//Todo Show cumulative Scores, 
 
-			//Todo play another, change sides, new players, quit?
+			//Play another, change sides, new players, quit?
 			getPostGameInputFromUser();
 			processInput();
 		}
