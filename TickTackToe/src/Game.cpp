@@ -20,60 +20,6 @@ void Game::changeSides() {
 
 	//swap(player[0], player[1]);
 }
-void Game::clearEntries() {
-	for (char& c : entries)
-		c = ENTRIES_DEFAULT_CHAR;
-}
-void Game::drawGame() {
-	std::cout.flush();
-	Utility::clear_screen();
-	printEntries();
-	//Grid is 3 x (cellwidth + 2 separatorlinewidths) wide
-	//Grid is 3 x (cellheight + 2 separatorlineheigts) high
-
-	//Go screen line by line
-	for (unsigned int i = 0; i < DISPLAY_ROWS; i++) {
-		//Row loop
-		std::cout << "\n";
-		//Space to line up row labels
-		if (i < 10) std::cout << " ";
-		std::cout << i << ": ";
-		for (unsigned int j = 0; j < DISPLAY_COLS; j++) {
-			//Column loop
-
-			if ((i + 1) % DISPLAY_V_STRIDE == 0) {
-				//Row of dividers
-				if ((j + 1) % DISPLAY_H_STRIDE == 0) std::cout << DIVIDER_CROSS_CHAR;
-				else std::cout << DIVIDER_H_CHAR;
-			}
-			else {
-				//Not row of dividers
-				if ((j + 1) % DISPLAY_H_STRIDE == 0) {
-					//Divider in this column
-					std::cout << DIVIDER_V_CHAR;
-				}
-				//Check for entries and virtical dividers
-				else {
-					if ((j + FIRST_ENTRY_COL) % DISPLAY_H_STRIDE == 0) {
-						//Column has entries
-						if ((i + FIRST_ENTRY_ROW) % DISPLAY_V_STRIDE == 0) {
-							//At column containing entry
-							unsigned int gridRow = (i / DISPLAY_V_STRIDE);
-							unsigned int gridCol = (j / DISPLAY_H_STRIDE);
-							//std::cout << "(" << gridRow << ", " << gridCol << ")";
-							//std::cout << gridRow * GRID_COLS + gridCol;
-							std::cout << entries[gridRow * GRID_COLS + gridCol];
-						}
-						else std::cout << SPACE_CHAR;
-					}
-					else std::cout << SPACE_CHAR;
-				}
-			}
-		}
-	}
-	std::cout << std::endl;
-	printGameResult();
-}
 void Game::getGameTypeFromUser() {
 	int numPlayers = 99;	//ensures user prompt
 	while (numPlayers > 2) {
@@ -130,18 +76,18 @@ void Game::getPostGameInputFromUser() {
 	}
 }
 void Game::getMoveInput() {
+	resetMoveIsLegal();
 	if (players[currentPlayer].isCom()) getMoveInputFromCom();
 	else getMoveInputFromHuman();
 }
 void Game::getMoveInputFromCom() {
-	for (auto i = 0; i < GRID_CELLS; i++) {
-		if (entries[i] == ENTRIES_DEFAULT_CHAR) {
+	for (auto i = 0; i < grid.GetCells(); i++) {
+		if (grid.isEntryOpen(i)) {
 			userEntry = i + 48; //simulate key code
 			break;
 		}
 	 }
 }
-
 void Game::getMoveInputFromHuman() {
 	unsigned int inputCode;
 	while (1) {
@@ -160,7 +106,7 @@ bool Game::isGameOver() {
 		|| (gameState == GameState::GAME_TIED);
 }
 bool Game::isLine(unsigned int a, unsigned int b, unsigned int c) {
-	if ((entries[a] == entries[b]) && (entries[a] == entries[c]) && entries[a] != ENTRIES_DEFAULT_CHAR) {
+	if (grid.isLine(a, b, c)) {
 		setWinner(a);
 		gameState = GameState::GAME_WON;
 		return true;
@@ -168,11 +114,11 @@ bool Game::isLine(unsigned int a, unsigned int b, unsigned int c) {
 	return false;
 }
 void Game::newGame() {
-	clearEntries();
+	grid.clearEntries();
 	currentPlayer = PLAYER_ONES_TURN;
 	gameState = GameState::ACTIVE_GAME;
 	std::cout << "NEW GAME!!!\n";
-	drawGame();
+	grid.drawGame();
 }
 void Game::newSession() {
 	sessionState = SessionState::ACTIVE_SESSION;
@@ -183,20 +129,16 @@ void Game::nextMove() {
 	if (gameState != GameState::ACTIVE_GAME) return;
 	//Get input from next player
 	getMoveInput();
-	processInput();// Evaluate if the game is won, tied or lost and sett state codes
-	//Switch players if still playing
-	changePlayers();
+	processInput();// Evaluate if the game is won, tied or lost and set state codes
+	//Switch players if still playing AND move was good
+	if(moveIsLegal()) changePlayers();
 	//Update display, displaying current play or winner or tie
-	drawGame();
+	grid.drawGame();
+	printGameResult();
 }
 void Game::printCurrentPlayerName() {
 	std::cout << players[currentPlayer].getName();
 	std::cout << "( " << players[currentPlayer].getSymbol() << " )";
-}
-void Game::printEntries() {
-	for (char c : entries)
-		std::cout << c << ",";
-	std::cout << std::endl;
 }
 void Game::printGameResult() {
 	switch (gameState) {
@@ -254,11 +196,10 @@ void Game::processInput() {
 	case 54:
 	case 55:
 	case 56:
-	case 57:
 		updateEntries();
 		break;
-		default:
-			break;
+	default:
+		break;
 	}
 }
 void Game::run(){
@@ -280,20 +221,15 @@ void Game::run(){
 }
 void Game::setWinner(unsigned int a) {
 	//a is index of winning symbol
-	if (entries[a] == players[0].getSymbol()) winner = 0;
+	if (grid.getEntry(a) == players[0].getSymbol()) winner = 0;
 	else winner = 1;
 }
 void Game::updateEntries(){
-	unsigned int index = userEntry - 48;
-	if (index > GRID_CELLS) return;
-	if (entries[index] != ENTRIES_DEFAULT_CHAR) return;
-	std::cout << "Index into entries:" << index;
-	std::cout << " Current symbol: " << players[currentPlayer].getSymbol() << std::endl;
-	entries[index] = players[currentPlayer].getSymbol();
+	if(grid.newEntry(userEntry - 48, players[currentPlayer].getSymbol())) setMoveIsLegal();
 	updateGameState();
 }
 void Game::updateGameState() {
-	//Check game for win or tie, set game state accordingly
+	//Check grid for win or tie, set game state accordingly
 	//Game over
 	//Was it a win? if not, it is a tie
 	bool isWin = false;
@@ -311,9 +247,7 @@ void Game::updateGameState() {
 		if (isWin = isLine(0, 4, 8)) break;
 		if (isWin = isLine(2, 4, 6)) break;	
 		//Stll in loop, might be a tie
-		//check for full grid
-		auto it = std::find(entries.begin(), entries.end(), ENTRIES_DEFAULT_CHAR);
-		if (it == entries.end()) {
+		if (grid.isGridFull()) {
 			gameState = GameState::GAME_TIED;
 			break;
 		}
