@@ -79,6 +79,7 @@ private:
 	void getMoveInputFromCom();
 	void getMoveInputFromHuman();
 	void initGame() {
+		grid.setDividerDouble();
 		gameState = GameState::PENDING_GAME;
 		sessionState = SessionState::PENDING_SESSION;
 		players.push_back(Player());	// create player 1
