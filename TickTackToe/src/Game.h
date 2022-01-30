@@ -52,16 +52,29 @@ class Game
 	GameType		gameType;
 	unsigned int 	currentPlayer;
 	unsigned int	winner;
-	const unsigned int	GRID_ROWS	= 3;
-	const unsigned int	GRID_COLS	= 3;
-	const unsigned int	GRID_CELLS	= GRID_ROWS * GRID_COLS;
-	const unsigned int	NUM_H_SPACES = 2; //Number of horizontal spaces surrounding an entry
-	const unsigned int	NUM_V_SPACES = 1; //Number of vertical spaces surrounding an entry
-	const unsigned int	DISPLAY_ROWS = GRID_ROWS * (NUM_V_SPACES * 2 + 1) + (GRID_ROWS - 1);	//3 rows, each with 1 entries 2x spaceCnt, 2 dividers
-	const unsigned int	DISPLAY_COLS = GRID_COLS * (NUM_H_SPACES * 2 + 1) + (GRID_COLS - 1);	//3 colss, each with 1 entries 2x spaceCnt, 2 dividers
-	const char ENTRIES_DEFAULT_CHAR  = ' ';
-	const char PLAYER1_DEFAULT_SYMBOL = 'X';
-	const char PLAYER2_DEFAULT_SYMBOL = 'O';
+	const unsigned int	GRID_ROWS		= 3;
+	const unsigned int	GRID_COLS		= 3;
+	const unsigned int	GRID_CELLS		= GRID_ROWS * GRID_COLS;
+	const unsigned int  NUM_ENTRY_CHARS = 1;
+	const unsigned int	NUM_H_SPACES	= 2; //Number of horizontal spaces surrounding an entry
+	const unsigned int	NUM_V_SPACES	= 1; //Number of vertical spaces surrounding an entry
+	const unsigned int  NUM_H_DIVIDER_CHARS = 1;
+	const unsigned int  NUM_V_DIVIDER_CHARS = 1;
+	const unsigned int  FIRST_ENTRY_ROW		= 1 + NUM_V_SPACES + NUM_ENTRY_CHARS;
+	const unsigned int  FIRST_ENTRY_COL		= 1 + NUM_H_SPACES + NUM_ENTRY_CHARS;
+	const unsigned int	DISPLAY_ROWS		= GRID_ROWS * (NUM_V_SPACES * 2 + NUM_ENTRY_CHARS) + (GRID_ROWS - 1);	//Grid rows - 1 as no divider at bottom of grid
+	const unsigned int	DISPLAY_COLS		= GRID_COLS * (NUM_H_SPACES * 2 + 1) + (GRID_COLS - 1);	//3 colss, each with 1 entries 2x spaceCnt, 2 dividers
+	const unsigned int  DISPLAY_H_STRIDE	= NUM_ENTRY_CHARS + NUM_H_DIVIDER_CHARS + 2 * NUM_H_SPACES;
+	const unsigned int  DISPLAY_V_STRIDE	= NUM_ENTRY_CHARS + NUM_V_DIVIDER_CHARS + 2 * NUM_V_SPACES;
+	
+	//Grid characters
+	const char SPACE_CHAR				= ' ';
+	const char DIVIDER_V_CHAR			= char(179);
+	const char DIVIDER_H_CHAR			= char(196);
+	const char DIVIDER_CROSS_CHAR		= char(197);
+	const char ENTRIES_DEFAULT_CHAR		= SPACE_CHAR;
+	const char PLAYER1_DEFAULT_SYMBOL	= 'X';
+	const char PLAYER2_DEFAULT_SYMBOL	= 'O';
 	std::vector<char>	entries;
 	unsigned int		userEntry;
 	
