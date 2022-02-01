@@ -1,7 +1,10 @@
 #pragma once
 #include <vector>
+#include<cstdlib>
+#include<ctime>
 
 #include "ticktacktoegrid.h"
+#include "Utility.h"
 
 
 class Game
@@ -27,6 +30,7 @@ class Game
 	enum class GameState{
 		PENDING_GAME,
 		ACTIVE_GAME,
+		GAME_ABANDONNED,
 		GAME_OVER,	//no result
 		GAME_WON,
 		GAME_TIED
@@ -70,15 +74,28 @@ public:
 	void run();
 	
 private:
-	void changePlayers();
+	bool blockRowOfTwo();
+	void changeToNextPlayer();
 	void changeSides();
+	void comMoveAdvanced();
+	void comMoveIntermediate();
+	void comMoveNovice();
+	void drawGame() { grid.drawGame(); printGameResult(); }
+	void findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax);
+	void gameAbandon();
+	void gameEnd();
+	const char getCurrentSymbol() { return players[currentPlayer].getSymbol(); }
 	void getGameTypeFromUser();
+	const unsigned int getOpponentPlayer() { return currentPlayer ^ 1; }
+	const char getOpponentSymbol() { return players[getOpponentPlayer()].getSymbol(); }
 	void getPostGameInputFromUser();
 	void getPlayerName(unsigned int player);
 	void getMoveInput();
 	void getMoveInputFromCom();
 	void getMoveInputFromHuman();
 	void initGame() {
+		//Randomize computer random cell picker
+		srand(static_cast<unsigned int>(time(0)));
 		grid.setDividerDouble();
 		gameState = GameState::PENDING_GAME;
 		sessionState = SessionState::PENDING_SESSION;
@@ -88,9 +105,12 @@ private:
 		players[1].setSymbol(PLAYER2_DEFAULT_SYMBOL);
 		std::cout << "Created game\n";
 	}
+	bool isActiveGame() { return gameState == GameState::ACTIVE_GAME; }
 	bool isGameOver();
 	bool isLine(unsigned int a, unsigned int b, unsigned int c);
 	bool isSessionOver() { return sessionState == SessionState::SESSION_OVER; }
+	bool makeRowOfThree();
+	bool makeTwoInARow();
 	bool moveIsLegal() { return moveLegal; }
 	void newGame();
 	void newSession();
@@ -98,9 +118,13 @@ private:
 	bool newSessionRequest() { return sessionState == SessionState::NEW_SESSION_REQESTED; }
 	void printCurrentPlayerName();
 	void printGameResult();
-	void processInput();
+	bool processInput();
 	void resetMoveIsLegal() { moveLegal = false; }
+	void sessionEnd();
 	void setMoveIsLegal()	{ moveLegal = true; }
+	bool setUserEntryFromCellNum(unsigned int cellNum);
+	bool setUserEntryFromAlphaKeyCode(char keyCode);
+	bool setUserEntryFromAlphaNumKeyCode(char keyCode);
 	void setWinner(unsigned int a);
 	void updateEntries();
 	void updateGameState();

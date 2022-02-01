@@ -5,6 +5,7 @@
 class Utility
 {
 public:
+    static void cursorToZeroZero(){ printf("\033[0;0HHello\n"); }
     static void clear_screen(char fill = ' ') {
         COORD tl = { 0,0 };
         CONSOLE_SCREEN_BUFFER_INFO s;

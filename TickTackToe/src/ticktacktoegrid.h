@@ -6,7 +6,7 @@ class TickTackToeGrid {
 	
 	const unsigned int	GRID_ROWS = 3;
 	const unsigned int	GRID_COLS = 3;
-	const unsigned int	NUM_CELLS = GRID_ROWS * GRID_COLS;
+	const size_t		NUM_CELLS = GRID_ROWS * GRID_COLS;
 	const unsigned int  NUM_ENTRY_CHARS = 1;
 	const unsigned int	NUM_H_SPACES = 2; //Number of horizontal spaces surrounding an entry
 	const unsigned int	NUM_V_SPACES = 1; //Number of vertical spaces surrounding an entry
@@ -39,8 +39,12 @@ public:
 
 	void clearEntries();
 	void drawGame();
-	unsigned int GetCells() { return NUM_CELLS; }
+	std::vector<unsigned int> getEmptyCells();
+	std::vector<char> getEntries() { return entries; }
 	char getEntry(unsigned int index) { return entries[index]; }
+	size_t GetNumCells() { return NUM_CELLS; }
+	std::vector<unsigned int> getLineCompletions(char symbol);
+	std::vector<unsigned int> getMakeTwoLines(char symbol);
 	bool isEntryOpen(const unsigned int index) { return entries[index] == ENTRIES_DEFAULT_CHAR; }
 	bool isGridFull();
 	bool isLine(unsigned int a, unsigned int b, unsigned int c) { return (entries[a] == entries[b]) && (entries[a] == entries[c]) && (entries[a] != ENTRIES_DEFAULT_CHAR); }
@@ -57,5 +61,7 @@ private:
 		//Initialize with single line dividers
 		divSingle = true;
 	}
-
-};
+	const int oneInLine(char symbol, unsigned int a, unsigned int b, unsigned int c);
+	const int pendingLine(const char symbol, const unsigned int a, const unsigned int b, const unsigned int c);
+	void processOneInLine(char symbol, std::vector < unsigned int>& vec, unsigned int a, unsigned int b, unsigned int c);
+	};
