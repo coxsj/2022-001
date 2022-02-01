@@ -13,15 +13,13 @@ class Game
 		std::string getName() { return name; }
 		char getSymbol() { return symbol; }
 		bool isCom() { return com; }
+		void setHuman() { com = false; }
 		void setCom() { com = true; }
 		void setName(const char* s) { name = std::string(s); }
 		void setName(std::string& s) { name = s; }
-		void setPlayer(bool newCom, const char* s) {
-			com = newCom;
-			name = std::string(s);
-		}
+		void setPlayer(bool newCom, const char* s) { com = newCom; name = std::string(s);}
 		void setSymbol(const char c) { symbol = c; }
-		void resetCom() { com = false; }
+		
 	private:
 		bool com;
 		std::string name;
@@ -37,17 +35,12 @@ class Game
 	};
 	enum class SessionState {
 		PENDING_SESSION,
-		ACTIVE_SESSION,
-		SESSION_CHANGE_REQUESTED,
+		ONE_PLAYER_SESSION,
+		TWO_PLAYER_SESSION,
+		AUTOMATED_SESSION,
 		NEW_SESSION_REQESTED,
 		SESSION_OVER
 	};
-	enum class GameType {
-		ZERO_PLAYER,
-		ONE_PLAYER,
-		TWO_PLAYER
-	};
-
 
 	const unsigned int PLAYER_ONES_TURN = 0;
 	const unsigned int PLAYER_TWOS_TURN = 1;
@@ -58,7 +51,6 @@ class Game
 	std::vector<Player>		players;
 	GameState		gameState;
 	SessionState	sessionState;
-	GameType		gameType;
 	unsigned int 	currentPlayer;
 	unsigned int	winner;
 	const char PLAYER1_DEFAULT_SYMBOL = 'X';
@@ -85,7 +77,6 @@ private:
 	void gameAbandon();
 	void gameEnd();
 	const char getCurrentSymbol() { return players[currentPlayer].getSymbol(); }
-	void getGameTypeFromUser();
 	const unsigned int getOpponentPlayer() { return currentPlayer ^ 1; }
 	const char getOpponentSymbol() { return players[getOpponentPlayer()].getSymbol(); }
 	void getPostGameInputFromUser();
@@ -93,6 +84,7 @@ private:
 	void getMoveInput();
 	void getMoveInputFromCom();
 	void getMoveInputFromHuman();
+	void getNewSessionFromUser();
 	void initGame() {
 		//Randomize computer random cell picker
 		srand(static_cast<unsigned int>(time(0)));
@@ -106,22 +98,22 @@ private:
 		std::cout << "Created game\n";
 	}
 	bool isActiveGame() { return gameState == GameState::ACTIVE_GAME; }
-	bool isGameOver();
+	bool isGameEnded();
 	bool isLine(unsigned int a, unsigned int b, unsigned int c);
 	bool isSessionOver() { return sessionState == SessionState::SESSION_OVER; }
 	bool makeRowOfThree();
 	bool makeTwoInARow();
 	bool moveIsLegal() { return moveLegal; }
 	void newGame();
-	void newSession();
 	void nextMove();
 	bool newSessionRequest() { return sessionState == SessionState::NEW_SESSION_REQESTED; }
 	void printCurrentPlayerName();
 	void printGameResult();
 	bool processInput();
 	void resetMoveIsLegal() { moveLegal = false; }
-	void sessionEnd();
+	void sessionEnd() { sessionState = SessionState::SESSION_OVER; }
 	void setMoveIsLegal()	{ moveLegal = true; }
+	void setSessionStateZeroPlayer();
 	bool setUserEntryFromCellNum(unsigned int cellNum);
 	bool setUserEntryFromAlphaKeyCode(char keyCode);
 	bool setUserEntryFromAlphaNumKeyCode(char keyCode);

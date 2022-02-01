@@ -52,7 +52,7 @@ void Game::comMoveIntermediate() {
 }
 void Game::comMoveNovice() {
 	const std::vector<unsigned int> emptyCells = std::move(grid.getEmptyCells());
-	if (emptyCells.size() == 1) userEntry = emptyCells[0];
+	if (emptyCells.size() == 1) setUserEntryFromCellNum(emptyCells[0]);
 	else if (setUserEntryFromCellNum(emptyCells[rand() % emptyCells.size()])) return;
 	else setUserEntryFromAlphaKeyCode('b');
 }
@@ -71,7 +71,7 @@ void Game::gameAbandon() {
 void Game::gameEnd(){
 	gameState = GameState::GAME_OVER;
 }
-void Game::getGameTypeFromUser() {
+void Game::getNewSessionFromUser() {
 	int numPlayers = 99;	//ensures user prompt
 	while (numPlayers > 2) {
 		std::cout << "How many players? (0, 1, 2) " << std::endl;
@@ -80,22 +80,18 @@ void Game::getGameTypeFromUser() {
 	std::cout << numPlayers << " player";
 	if (numPlayers != 1) std::cout << "s";
 	std::cout << " it is!\n";
-	if (numPlayers == 0) {
-		gameType = GameType::ZERO_PLAYER;
-		players[0].setPlayer(comPlayer, PLAYER1_DEFAULT_NAME);
-		players[1].setPlayer(comPlayer, PLAYER2_DEFAULT_NAME);
-	}
+	if (numPlayers == 0) setSessionStateZeroPlayer();
 	if (numPlayers == 1) {
-		gameType = GameType::ONE_PLAYER;
-		players[0].resetCom();
+		sessionState = SessionState::ONE_PLAYER_SESSION;
+		players[0].setHuman();
 		getPlayerName(1);
 		players[1].setPlayer(comPlayer, PLAYER2_DEFAULT_NAME);
 	}
 	if (numPlayers == 2) {
-		gameType = GameType::TWO_PLAYER;
-		players[0].resetCom();
+		sessionState = SessionState::TWO_PLAYER_SESSION;
+		players[0].setHuman();
 		getPlayerName(1);
-		players[1].resetCom();
+		players[1].setHuman();
 		getPlayerName(2);
 	}
 }
@@ -143,7 +139,7 @@ void Game::getMoveInputFromHuman() {
 		if (setUserEntryFromAlphaNumKeyCode(inputCode)) break;
 	}
 }
-bool Game::isGameOver() { 
+bool Game::isGameEnded() { 
 	return (gameState == GameState::GAME_ABANDONNED)
 		|| (gameState == GameState::GAME_OVER)
 		|| (gameState == GameState::GAME_WON)
@@ -183,13 +179,9 @@ void Game::newGame() {
 	grid.clearEntries();
 	currentPlayer = PLAYER_ONES_TURN;
 	gameState = GameState::ACTIVE_GAME;
+	Utility::clear_screen();
 	drawGame();
 	std::cout << "NEW GAME!!!\n";
-}
-void Game::newSession() {
-	sessionState = SessionState::ACTIVE_SESSION;
-	getGameTypeFromUser();
-	//Todo load player score history if any
 }
 void Game::nextMove() {
 	if (gameState != GameState::ACTIVE_GAME) return;
@@ -226,11 +218,20 @@ void Game::printGameResult() {
 	default:
 		break;
 	}
-	if(isSessionOver()) std::cout << "Session over\n";
+	if(isSessionOver()) std::cout << "Thanks for playing\n";
 	std::cout << std::endl;
 }
 bool Game::processInput() {
 	switch (userEntry) {
+	case 'a':
+	case 'A':
+		//Automated session 
+
+
+		gameEnd();
+		sessionEnd();
+		setSessionStateZeroPlayer();
+		break;
 	case 'b':
 	case 'B':
 		//end current game, change sides
@@ -289,13 +290,21 @@ bool Game::processInput() {
 }
 void Game::run(){
 	while (!isSessionOver()) {
-		newSession();
+		getNewSessionFromUser();
 		while (1){
-			newGame();
-			while (!isGameOver()) {
-				nextMove();
+			//Session loop
+			while (1) {
+				//Automated play loop
+				newGame();
+				while (!isGameEnded()) {
+					//Game loop
+					nextMove();
+				}
+				Utility::clear_screen();
+				drawGame();
+				if (sessionState == SessionState::AUTOMATED_SESSION) processInput();
+				else break;	//Break out of automated session loop
 			}
-			drawGame();
 			if (newSessionRequest() || isSessionOver()) break;
 			
 			//Todo Show cumulative Scores, 
@@ -304,6 +313,7 @@ void Game::run(){
 			while (1) {
 				getPostGameInputFromUser();
 				if (processInput()) break;
+				Utility::clear_screen();
 				drawGame();
 			}
 			if (newSessionRequest() || isSessionOver()) break;
@@ -311,9 +321,10 @@ void Game::run(){
 	}
 	//Todo: Save score history for each player?
 }
-void Game::sessionEnd() {
-	sessionState = SessionState::SESSION_OVER;
-	std::cout << "Session Over!\n";
+void Game::setSessionStateZeroPlayer(){
+	sessionState = SessionState::AUTOMATED_SESSION;
+	players[0].setPlayer(comPlayer, PLAYER1_DEFAULT_NAME);
+	players[1].setPlayer(comPlayer, PLAYER2_DEFAULT_NAME);
 }
 bool Game::setUserEntryFromCellNum(unsigned int cellNum) { 
 	if (cellNum < grid.GetNumCells()) {

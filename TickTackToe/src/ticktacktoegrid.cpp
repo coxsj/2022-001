@@ -128,8 +128,6 @@ bool TickTackToeGrid::newEntry(unsigned int index, char symbol) {
 	if (index >= NUM_CELLS) return false;
 	//Cell is open?
 	if (entries[index] != ENTRIES_DEFAULT_CHAR) return false;
-	std::cout << "Index into entries:" << index;
-	std::cout << " Current symbol: " << symbol << std::endl;
 	entries[index] = symbol;
 	return true;
 }
