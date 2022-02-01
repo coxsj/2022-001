@@ -3,28 +3,13 @@
 #include<cstdlib>
 #include<ctime>
 
+#include "Player.h"
 #include "ticktacktoegrid.h"
 #include "Utility.h"
 
 
 class Game
 {
-	struct Player{
-		std::string getName() { return name; }
-		char getSymbol() { return symbol; }
-		bool isCom() { return com; }
-		void setHuman() { com = false; }
-		void setCom() { com = true; }
-		void setName(const char* s) { name = std::string(s); }
-		void setName(std::string& s) { name = s; }
-		void setPlayer(bool newCom, const char* s) { com = newCom; name = std::string(s);}
-		void setSymbol(const char c) { symbol = c; }
-		
-	private:
-		bool com;
-		std::string name;
-		char symbol;
-	};
 	enum class GameState{
 		PENDING_GAME,
 		ACTIVE_GAME,
