@@ -23,6 +23,7 @@
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Player.cpp" />
+    <ClCompile Include="src\score.cpp" />
     <ClCompile Include="src\ticktacktoegrid.cpp" />
     <ClCompile Include="src\Utility.cpp" />
   </ItemGroup>
@@ -30,6 +31,7 @@
     <ClInclude Include="src\Controller.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\Player.h" />
+    <ClInclude Include="src\score.h" />
     <ClInclude Include="src\ticktacktoegrid.h" />
     <ClInclude Include="src\Utility.h" />
   </ItemGroup>

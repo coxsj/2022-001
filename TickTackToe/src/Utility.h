@@ -4,17 +4,10 @@
 
 class Utility
 {
-public:
-    static void cursorToZeroZero(){ printf("\033[0;0H"); }
-    static void clear_screen(char fill = ' ') {
-        COORD tl = { 0,0 };
-        CONSOLE_SCREEN_BUFFER_INFO s;
-        HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-        GetConsoleScreenBufferInfo(console, &s);
-        DWORD written, cells = s.dwSize.X * s.dwSize.Y;
-        FillConsoleOutputCharacter(console, fill, cells, tl, &written);
-        FillConsoleOutputAttribute(console, s.wAttributes, cells, tl, &written);
-        SetConsoleCursorPosition(console, tl);
-    }
-};
 
+public:
+    //http://www.cplusplus.com/articles/4z18T05o/
+    static void cursorToZeroZero() { cursorTo(0, 0); }// printf("\033[0;0H");
+    static void cursorTo(const int newV, const int newH);
+    static void clear_screen(char fill = ' ');
+};

@@ -5,19 +5,37 @@
 #include "ticktacktoegrid.h"
 #include "utility.h"
 
+void TickTackToeGrid::blank() {
+	clearEntries();
+	for (auto i = 0; i < NUM_CELLS; i++)
+		printNewEntry(i, SPACE_CHAR);
+}
+void TickTackToeGrid::blankEntryListDisplay() {
+	for (auto i = 0; i < NUM_CELLS; i++)
+		printNewEntryOnEntryList(i, SPACE_CHAR);
+}
+void TickTackToeGrid::blankGrid() {
+	for (auto i = 0; i < NUM_CELLS; i++)
+		printNewEntryOnGrid(i, SPACE_CHAR);
+}
+void TickTackToeGrid::clearEntryListDisplay() {
+	//Move cursor to start position of Entry List
+	Utility::cursorTo(entryListStartVertical, entryListStartHorizontal);
+	//Print spaces to maximum length of list including separators and spaces
+	std::cout << entryListBlankString;
+}
 void TickTackToeGrid::drawGame() {
-	std::cout.flush();
-	//Utility::clear_screen();
-	Utility::cursorToZeroZero();
-	printEntries();
+	printEntryList();
+	drawGrid();
+}
+void TickTackToeGrid::drawGrid() {
 	//Grid is 3 x (cellwidth + 2 separatorlinewidths) wide
 	//Grid is 3 x (cellheight + 2 separatorlineheigts) high
-
 	char crossDivCh = divSingle ? DIVIDER_CROSS_CHAR : DBL_DIVIDER_CROSS_CHAR;
 	char hDivCh = divSingle ? DIVIDER_H_CHAR : DBL_DIVIDER_H_CHAR;
 	char vDivCh = divSingle ? DIVIDER_V_CHAR : DBL_DIVIDER_V_CHAR;
-
 	//Go screen line by line
+	Utility::cursorTo(gridStartVertical, gridStartHorizontal);
 	for (unsigned int i = FIRST_DISPLAY_ROW; i < NUM_DISPLAY_ROWS; i++) {
 		//Row loop
 		std::cout << "\n";
@@ -129,6 +147,7 @@ bool TickTackToeGrid::newEntry(unsigned int index, char symbol) {
 	//Cell is open?
 	if (entries[index] != ENTRIES_DEFAULT_CHAR) return false;
 	entries[index] = symbol;
+	printNewEntry(index, symbol);
 	return true;
 }
 const int TickTackToeGrid::oneInLine(char symbol, unsigned int a, unsigned int b, unsigned int c) {
@@ -161,14 +180,41 @@ const int TickTackToeGrid::pendingLine(const char symbol, const unsigned int a, 
 	//No match for any pattern of two symbols and a space in this line
 	return -1;
 }
-void TickTackToeGrid::printEntries() {
+void TickTackToeGrid::printEntryList() {
+	//Move cursor to start position
+	Utility::cursorTo(entryListStartVertical, entryListStartHorizontal);
 	for (char c : entries)
-		std::cout << c << ",";
+		std::cout << c << entryListSeparatorStr;
 	std::cout << std::endl;
+}
+void const TickTackToeGrid::printNewEntry (const unsigned int& index, const char& symbol) {
+	//Print new entry
+	printNewEntryOnEntryList(index, symbol);
+	//Update entry on grid
+	printNewEntryOnGrid(index, symbol);
+}
+void const TickTackToeGrid::printNewEntryOnEntryList(const unsigned int& index, const char& symbol) {
+	//Print new entry on entry list
+	Utility::cursorTo(entryListStartVertical, entryListStartHorizontal + cEntryListStride * index);
+	std::cout << symbol;
+}
+void const TickTackToeGrid::printNewEntryOnGrid(const unsigned int& index, const char& symbol) {
+	//Update entry on grid
+	Utility::cursorTo(	gridStartVertical + FIRST_ENTRY_ROW - 1 + (index% GRID_ROWS) * DISPLAY_V_STRIDE,
+						gridStartHorizontal + FIRST_ENTRY_COL + 2 + (index % GRID_COLS) * DISPLAY_H_STRIDE);
+	std::cout << symbol;
 }
 void TickTackToeGrid::processOneInLine(char symbol, std::vector < unsigned int>& vec, unsigned int a, unsigned int b, unsigned int c) {
 	int indexOfMySymbol;
 	if (      (indexOfMySymbol = oneInLine(symbol, a, b, c)) == a) { vec[b]++; vec[c]++; }
 	else if ( (indexOfMySymbol = oneInLine(symbol, a, b, c)) == b) { vec[a]++; vec[c]++; }
 	else if ( (indexOfMySymbol = oneInLine(symbol, a, b, c)) == c) { vec[a]++; vec[b]++; }
+}
+void TickTackToeGrid::setEntryListPosition(const int newVertical, const int newHorizontal) {
+	entryListStartVertical = newVertical;
+	entryListStartHorizontal = newHorizontal;
+}
+void TickTackToeGrid::setGridPosition(const int newVertical, const int newHorizontal) {
+	gridStartVertical = newVertical;
+	gridStartHorizontal = newHorizontal;
 }

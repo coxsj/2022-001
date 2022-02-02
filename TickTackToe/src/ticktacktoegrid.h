@@ -1,9 +1,11 @@
 #pragma once
 #include <vector>
+#include <string>
 
 
 class TickTackToeGrid {
 	
+	//Grid Sizing Parameters
 	const unsigned int	GRID_ROWS = 3;
 	const unsigned int	GRID_COLS = 3;
 	const size_t		NUM_CELLS = GRID_ROWS * GRID_COLS;
@@ -12,7 +14,6 @@ class TickTackToeGrid {
 	const unsigned int	NUM_V_SPACES = 1; //Number of vertical spaces surrounding an entry
 	const unsigned int  NUM_H_DIVIDER_CHARS = 1;
 	const unsigned int  NUM_V_DIVIDER_CHARS = 1;
-
 	const unsigned int  FIRST_DISPLAY_COL = 0;
 	const unsigned int  FIRST_DISPLAY_ROW = 0;
 	const unsigned int  FIRST_ENTRY_ROW = 1 + NUM_V_SPACES + NUM_ENTRY_CHARS;
@@ -34,14 +35,36 @@ class TickTackToeGrid {
 	bool divSingle = true;
 	std::vector<char>	entries;
 
+	//Grid Display Location
+	int gridStartVertical;
+	int gridStartHorizontal;
+	const int GRID_START_VERTICAL_DEFAULT = 2;
+	const int GRID_START_HORIZONTAL_DEFAULT = 0;
+
+	//Entry List
+	int entryListStartVertical;
+	int entryListStartHorizontal;
+	const unsigned int cNumEntrySpaces = 1;
+	const unsigned int cNumEntrySeparators = 1;
+	std::string entryListSeparatorStr;
+	unsigned int cEntryListStride;
+	std::string entryListBlankString;
+	const int ENTRY_LIST_START_VERTICAL_DEFAULT = 0;
+	const int ENTRY_LIST_START_HORIZONTAL_DEFAULT = 0;
+
 public:
 	TickTackToeGrid() { initGrid(); };
 
+	void blank();
+	void blankEntryListDisplay();
+	void blankGrid();
 	void clearEntries();
 	void drawGame();
+	void drawGrid();
 	std::vector<unsigned int> getEmptyCells();
 	std::vector<char> getEntries() { return entries; }
 	char getEntry(unsigned int index) { return entries[index]; }
+	unsigned int const getLastDisplayRow() { return gridStartVertical + NUM_DISPLAY_ROWS; }
 	size_t GetNumCells() { return NUM_CELLS; }
 	std::vector<unsigned int> getLineCompletions(char symbol);
 	std::vector<unsigned int> getMakeTwoLines(char symbol);
@@ -49,19 +72,36 @@ public:
 	bool isGridFull();
 	bool isLine(unsigned int a, unsigned int b, unsigned int c) { return (entries[a] == entries[b]) && (entries[a] == entries[c]) && (entries[a] != ENTRIES_DEFAULT_CHAR); }
 	bool newEntry(unsigned int index, char symbol);
-	void printEntries();
+	void printEntryList();
 	void setDividerDouble() { divSingle = false; }
 	void setDividerSingle() { divSingle = true;  }
+	void setEntryListPosition(const int newVertical, const int newHorizontal);
+	void setGridPosition(const int newVertical, const int newHorizontal);
 
 private:
+	void clearEntryListDisplay();
 	void initGrid() {
 		//Set up entry vector
 		for (int i = 0; i < NUM_CELLS; i++)
 			entries.push_back(ENTRIES_DEFAULT_CHAR);
-		//Initialize with single line dividers
+		//Entry List
+		int numChars = (NUM_CELLS * NUM_ENTRY_CHARS) + (NUM_CELLS - 1)*(cNumEntrySpaces + cNumEntrySeparators);
+		for (int i = 0; i < numChars; i++)
+			entryListBlankString.push_back(SPACE_CHAR);
+		entryListSeparatorStr = ", ";
+		cEntryListStride = entryListSeparatorStr.size() + NUM_ENTRY_CHARS;
+		setEntryListPosition(ENTRY_LIST_START_VERTICAL_DEFAULT, ENTRY_LIST_START_HORIZONTAL_DEFAULT);
+		printEntryList();
+		//Initialize grid with single line dividers
 		divSingle = true;
+		setGridPosition(GRID_START_VERTICAL_DEFAULT, GRID_START_HORIZONTAL_DEFAULT);
+		
 	}
 	const int oneInLine(char symbol, unsigned int a, unsigned int b, unsigned int c);
 	const int pendingLine(const char symbol, const unsigned int a, const unsigned int b, const unsigned int c);
+	void const printNewEntry (const unsigned int& index, const char& symboll);
+	void const printNewEntryOnEntryList(const unsigned int& index, const char& symbol);
+	void const printNewEntryOnGrid (const unsigned int& index, const char& symbol);
 	void processOneInLine(char symbol, std::vector < unsigned int>& vec, unsigned int a, unsigned int b, unsigned int c);
+	
 	};

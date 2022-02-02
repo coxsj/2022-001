@@ -4,47 +4,58 @@
 #include<ctime>
 
 #include "Player.h"
+#include "score.h"
 #include "ticktacktoegrid.h"
 #include "Utility.h"
 
-
 class Game
 {
+	//Players
+	enum class PLAYER : unsigned int {
+		ONE = 0,
+		TWO = 1
+	};
+	std::vector<Player>	players;
+	const unsigned int	PLAYER_ONE				= 0;
+	const unsigned int	PLAYER_TWO				= PLAYER_ONE + 1;
+	const char*			PLAYER1_DEFAULT_NAME	= "Player1";
+	const char*			PLAYER2_DEFAULT_NAME	= "Player2";
+	const bool			COM_PLAYER				= true;
+	const bool			HUMAN_PLAYER			= !COM_PLAYER;
+	PLAYER 				currentPlayer;
+	unsigned int		winner;
+	
+	//Scores
+	std::vector<Score> scores;
+
+	//Game
 	enum class GameState{
 		PENDING_GAME,
 		ACTIVE_GAME,
 		GAME_ABANDONNED,
-		GAME_OVER,	//no result
 		GAME_WON,
 		GAME_TIED
 	};
+	GameState		gameState;
+	unsigned int	userEntry;
+	bool			moveLegal;
+	
+	//Session
 	enum class SessionState {
 		PENDING_SESSION,
 		ONE_PLAYER_SESSION,
 		TWO_PLAYER_SESSION,
 		AUTOMATED_SESSION,
-		NEW_SESSION_REQESTED,
+		NEW_SESSION_REQUESTED,
 		SESSION_OVER
 	};
-
-	const unsigned int PLAYER_ONES_TURN = 0;
-	const unsigned int PLAYER_TWOS_TURN = 1;
-	const char* PLAYER1_DEFAULT_NAME = "Player1";
-	const char* PLAYER2_DEFAULT_NAME = "Player2";
-	const bool				comPlayer = true;
-	const bool				humanPlayer = !comPlayer;
-	std::vector<Player>		players;
-	GameState		gameState;
 	SessionState	sessionState;
-	unsigned int 	currentPlayer;
-	unsigned int	winner;
-	const char PLAYER1_DEFAULT_SYMBOL = 'X';
-	const char PLAYER2_DEFAULT_SYMBOL = 'O';
-
-	TickTackToeGrid		grid;
-	unsigned int		userEntry;
-	bool				moveLegal;
 	
+	//Grid
+	TickTackToeGrid	grid;
+	const char		PLAYER1_DEFAULT_SYMBOL = 'X';
+	const char		PLAYER2_DEFAULT_SYMBOL = 'O';
+
 public:
 	Game() { initGame(); }
 
@@ -57,13 +68,13 @@ private:
 	void comMoveAdvanced();
 	void comMoveIntermediate();
 	void comMoveNovice();
-	void drawGame() { grid.drawGame(); printGameResult(); }
+	void drawGame() { grid.printEntryList(); grid.drawGame(); printGameResult(); }
+	void endCurrentGame();
 	void findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax);
-	void gameAbandon();
-	void gameEnd();
-	const char getCurrentSymbol() { return players[currentPlayer].getSymbol(); }
-	const unsigned int getOpponentPlayer() { return currentPlayer ^ 1; }
-	const char getOpponentSymbol() { return players[getOpponentPlayer()].getSymbol(); }
+	bool getASyncInput();
+	const char getCurrentSymbol() { return players[static_cast<unsigned int>(currentPlayer)].getSymbol(); }
+	PLAYER getOpponentPlayer() { return currentPlayer == PLAYER::ONE ? PLAYER::TWO : PLAYER::ONE; }
+	const char getOpponentSymbol() { return players[static_cast<unsigned int>(getOpponentPlayer())].getSymbol(); }
 	void getPostGameInputFromUser();
 	void getPlayerName(unsigned int player);
 	void getMoveInput();
@@ -82,8 +93,8 @@ private:
 		players[1].setSymbol(PLAYER2_DEFAULT_SYMBOL);
 		std::cout << "Created game\n";
 	}
-	bool isActiveGame() { return gameState == GameState::ACTIVE_GAME; }
-	bool isGameEnded();
+	bool isGameActive() { return gameState == GameState::ACTIVE_GAME; }
+	bool isGamePending() { return gameState == GameState::PENDING_GAME; }
 	bool isLine(unsigned int a, unsigned int b, unsigned int c);
 	bool isSessionOver() { return sessionState == SessionState::SESSION_OVER; }
 	bool makeRowOfThree();
@@ -91,13 +102,16 @@ private:
 	bool moveIsLegal() { return moveLegal; }
 	void newGame();
 	void nextMove();
-	bool newSessionRequest() { return sessionState == SessionState::NEW_SESSION_REQESTED; }
+	bool newSessionRequest() { return sessionState == SessionState::NEW_SESSION_REQUESTED; }
 	void printCurrentPlayerName();
 	void printGameResult();
 	bool processInput();
+	void randomizeCurrentPlayer();
 	void resetMoveIsLegal() { moveLegal = false; }
-	void sessionEnd() { sessionState = SessionState::SESSION_OVER; }
+	void setSessionEnd() { sessionState = SessionState::SESSION_OVER; }
+	void setGamePending() { gameState = GameState::PENDING_GAME; }
 	void setMoveIsLegal()	{ moveLegal = true; }
+	void setNamesGamesWithHumans(const unsigned int numPlayers);
 	void setSessionStateZeroPlayer();
 	bool setUserEntryFromCellNum(unsigned int cellNum);
 	bool setUserEntryFromAlphaKeyCode(char keyCode);

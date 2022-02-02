@@ -4,7 +4,7 @@
 class Player {
 public:
 
-	Player(){}
+	Player() : com(false), name("unnamed"), symbol('-') {}
 	std::string getName() { return name; }
 	char getSymbol() { return symbol; }
 	bool isCom() { return com; }

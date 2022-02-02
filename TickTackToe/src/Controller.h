@@ -91,7 +91,6 @@ public:
 		printNameLn();
 	}
 private:
-	void getUserInput();
 	void initController(const unsigned int numP = MAX_PLAYERS) {
 		numPlayers = numP;
 		players = std::make_unique<Player[]>(numP);
