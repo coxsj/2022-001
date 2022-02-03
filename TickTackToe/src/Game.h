@@ -52,10 +52,12 @@ class Game
 	SessionState	sessionState;
 	
 	//Grid
-	TickTackToeGrid	grid;
+	TickTackToeGrid	ttt;
 	const char		PLAYER1_DEFAULT_SYMBOL = 'X';
 	const char		PLAYER2_DEFAULT_SYMBOL = 'O';
 
+	//Utility
+	Utility utility;
 public:
 	Game() { initGame(); }
 
@@ -68,7 +70,7 @@ private:
 	void comMoveAdvanced();
 	void comMoveIntermediate();
 	void comMoveNovice();
-	void drawGame() { grid.printEntryList(); grid.drawGame(); printGameResult(); }
+	void drawGame() { ttt.printEntryList(); ttt.drawGrid(); printGameResult(); }
 	void endCurrentGame();
 	void findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax);
 	bool getASyncInput();
@@ -84,14 +86,13 @@ private:
 	void initGame() {
 		//Randomize computer random cell picker
 		srand(static_cast<unsigned int>(time(0)));
-		grid.setDividerDouble();
+		ttt.setDividerDouble();
 		gameState = GameState::PENDING_GAME;
 		sessionState = SessionState::PENDING_SESSION;
 		players.push_back(Player());	// create player 1
 		players.push_back(Player());	// create player 2
 		players[0].setSymbol(PLAYER1_DEFAULT_SYMBOL);
 		players[1].setSymbol(PLAYER2_DEFAULT_SYMBOL);
-		std::cout << "Created game\n";
 	}
 	bool isGameActive() { return gameState == GameState::ACTIVE_GAME; }
 	bool isGamePending() { return gameState == GameState::PENDING_GAME; }
@@ -118,6 +119,6 @@ private:
 	bool setUserEntryFromAlphaNumKeyCode(char keyCode);
 	void setWinner(unsigned int a);
 	void updateEntries();
-	void updateGameState();
+	bool updateGameState();
 };
 

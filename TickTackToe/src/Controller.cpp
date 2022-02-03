@@ -7,7 +7,3 @@ void Controller::play() {
 	game->run();
 	std::cout << "\n";
 }
-
-void Controller::processUserInput() {
-
-}

@@ -6,6 +6,15 @@
 #include "Player.h"
 #include "Game.h"
 
+#ifdef DEBUG
+#define dout std::out
+#else
+//If the preprocessor replaces 'dout' with '0 && cout',
+//<< has higher precedence than && and short-circuit evaluation of && makes the 
+//whole line evaluate to 0. Since the 0 is not used the compiler generates 
+//no code at all for that line.
+#define dout 0 && std::cout 
+#endif
 
 class Controller
 {
@@ -34,16 +43,16 @@ public:
 	//Constructors
 	Controller() {
 		initController();
-		std::cout << "Controller Default constructor of "; printNameLn();
+		dout << "Controller Default constructor of "; printNameLn();
 	}
 	Controller(unsigned int players) {
-		std::cout << "Controller Default constructor with int of "; printNameLn();
+		dout << "Controller Default constructor with int of "; printNameLn();
 		initController(players);
 	}
 	//Copy constructor
 	Controller(const Controller& other) {
 		initController(other.playerCount());
-		std::cout << "Controller Copy constructor from "; other.printNameLn();
+		dout << "Controller Copy constructor from "; other.printNameLn();
 		rename(other.name + "_copy");
 	}
 	//Move constructor
@@ -51,19 +60,19 @@ public:
 		players = std::exchange(rhs.players, nullptr);
 		game = std::exchange(rhs.game, nullptr);
 		name = std::exchange(rhs.name, "husk(Empty and deletable)");
-		std::cout << "Controller Move constructor from "; printNameLn();
+		dout << "Controller Move constructor from "; printNameLn();
 	}
 	//Destructor
-	~Controller() { std::cout << "Controller Destructor of "; printNameLn(); }
+	~Controller() { dout << "Controller Destructor of "; printNameLn(); }
 	//By-val assignment operator overload
 	Controller& operator=(Controller copy) {
-		std::cout << "Controller by-value assignment (=) operator copying from "; copy.printNameLn();
+		dout << "Controller by-value assignment (=) operator copying from "; copy.printNameLn();
 		copy.swap(*this);
 		return *this;
 	}
 	//Member swap method
 	void swap(Controller& rhs) noexcept {
-		std::cout << "Swapping "; this->printName(); std::cout << "with "; rhs.printNameLn();
+		dout << "Swapping "; this->printName(); dout << "with "; rhs.printNameLn();
 		using std::swap;
 		swap(players, rhs.players);
 		swap(game, rhs.game);
@@ -80,13 +89,13 @@ public:
 	void play();
 	unsigned int playerCount() const { return numPlayers; }
 	void printName() const {
-		if (name.size() > 0) std::cout << name << " ";
-		else std::cout << "not_named ";
+		if (name.size() > 0) dout << name << " ";
+		else dout << "not_named ";
 	}
-	void printNameLn() const { printName();  std::cout << std::endl; }
+	void printNameLn() const { printName();  dout << std::endl; }
 	void rename(const std::string& newName) {
 		printName();
-		std::cout << "renamed to ";
+		dout << "renamed to ";
 		name = newName;
 		printNameLn();
 	}
@@ -99,5 +108,4 @@ private:
 		quit = false;
 		userEntry = "";
 	}
-	void processUserInput();
 };

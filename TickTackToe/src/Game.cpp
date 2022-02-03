@@ -6,7 +6,7 @@
 #include "utility.h"
 
 bool Game::blockRowOfTwo() {
-	const std::vector<unsigned int> opponentLineBlocks = (std::move(grid.getLineCompletions(getOpponentSymbol())));
+	const std::vector<unsigned int> opponentLineBlocks = (std::move(ttt.getLineCompletions(getOpponentSymbol())));
 	unsigned int maxSoFar = 0, maxCellIndex = 0;
 	findMax(opponentLineBlocks, maxSoFar, maxCellIndex);
 	//If more than one line uses an open cell, block that cell preferentially
@@ -50,7 +50,7 @@ void Game::comMoveIntermediate() {
 	comMoveNovice();
 }
 void Game::comMoveNovice() {
-	const std::vector<unsigned int> emptyCells = std::move(grid.getEmptyCells());
+	const std::vector<unsigned int> emptyCells = std::move(ttt.getEmptyCells());
 	if (emptyCells.size() == 1) setUserEntryFromCellNum(emptyCells[0]);
 	else if (setUserEntryFromCellNum(emptyCells[rand() % emptyCells.size()])) return;
 	else setUserEntryFromAlphaKeyCode('b');
@@ -60,7 +60,7 @@ void Game::endCurrentGame() {
 	else GameState::PENDING_GAME;
 }
 void Game::findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax){
-	for (auto i = 0; i < grid.GetNumCells(); i++) {
+	for (auto i = 0; i < ttt.GetNumCells(); i++) {
 		if (vec[i] > maxSoFar) {
 			maxSoFar = vec[i];
 			indexOfMax = i;
@@ -79,25 +79,31 @@ bool Game::getASyncInput() {
 }
 void Game::getNewSessionFromUser() {
 	int numPlayers = 99;	//ensures user prompt
+	utility.storeCursorPos();
+	std::string howManyPlayersStr("How many players? (0, 1, 2) ");
 	while (numPlayers > 2) {
-		std::cout << "How many players? (0, 1, 2) " << std::endl;
+		std::cout << howManyPlayersStr;
 		numPlayers = _getch() - 48;
+		utility.restoreStoredCursorPos();
 	}
-	std::cout << numPlayers << " player";
-	if (numPlayers != 1) std::cout << "s";
-	std::cout << " it is!\n";
+	utility.printNChars(howManyPlayersStr.size(), ' ');
+	utility.restoreStoredCursorPos();
 	if (numPlayers == 0) setSessionStateZeroPlayer();
 	else setNamesGamesWithHumans(numPlayers);
 }
 void Game::getPlayerName(unsigned int playerNum) {
 	if (playerNum > PLAYER_TWO) return;
 	std::string inputStr;
+	std::string enterNameStr("Enter Player" + std::to_string(playerNum + 1) + std::string(" name ( ") + players[playerNum].getSymbol() + " ): ");
+	utility.storeCursorPos();
 	while (1) {
-		std::cout << "Enter Player" << playerNum + 1 << " name ( ";
-		std::cout << players[playerNum].getSymbol() << " ): ";
+		std::cout << enterNameStr;
 		std::cin >> std::ws;  // eat up any leading white spaces
 		std::cin >> inputStr;
+		utility.restoreStoredCursorPos();
 		if (inputStr.size() > 0) {
+			utility.printNChars(enterNameStr.size() + inputStr.size(), ' ');
+			utility.restoreStoredCursorPos();
 			players[playerNum].setName(inputStr);
 			break;
 		}
@@ -122,21 +128,21 @@ void Game::getMoveInputFromCom() {
 void Game::getMoveInputFromHuman() {
 	unsigned int inputCode;
 	while (1) {
-		Utility::cursorTo(grid.getLastDisplayRow() + 1, 0);	//Todo replace 1 with constant
+		utility.cursorTo(ttt.getLastDisplayRow() + 2, 0);	//Todo replace 1 with constant
 		printCurrentPlayerName(); std::cout << "'s move. Enter cell number..." << std::endl;
 		inputCode = _getch();
 		if (setUserEntryFromAlphaNumKeyCode(inputCode)) break;
 	}
 }
 bool Game::isLine(unsigned int a, unsigned int b, unsigned int c) {
-	if (grid.isLine(a, b, c)) {
+	if (ttt.isLine(a, b, c)) {
 		setWinner(a);
 		return true;
 	}
 	return false;
 }
 bool Game::makeRowOfThree() {
-	const std::vector<unsigned int> lineCompletions = (std::move(grid.getLineCompletions(getCurrentSymbol())));
+	const std::vector<unsigned int> lineCompletions = (std::move(ttt.getLineCompletions(getCurrentSymbol())));
 	unsigned int maxSoFar = 0;
 	unsigned int maxCellIndex = 0;
 	findMax(lineCompletions, maxSoFar, maxCellIndex);
@@ -147,7 +153,7 @@ bool Game::makeRowOfThree() {
 	return false;
 }
 bool Game::makeTwoInARow() {
-	const std::vector<unsigned int> makeTwoLines = (std::move(grid.getMakeTwoLines(getCurrentSymbol())));
+	const std::vector<unsigned int> makeTwoLines = (std::move(ttt.getMakeTwoLines(getCurrentSymbol())));
 	unsigned int maxSoFar = 0;
 	unsigned int maxCellIndex = 0;
 	findMax(makeTwoLines, maxSoFar, maxCellIndex);
@@ -159,19 +165,14 @@ bool Game::makeTwoInARow() {
 }
 void Game::newGame() {
 	drawGame();
-	std::cout << "NEW GAME!!!\n";
 	gameState = GameState::ACTIVE_GAME;
 }
 void Game::nextMove() {
 	if (gameState != GameState::ACTIVE_GAME) return;
-	//Get input from next player
 	getMoveInput();
-	processInput();// Evaluate if the game is won, tied or lost and set state codes
-	//Switch players if still playing AND move was good
+	processInput();
 	if (moveIsLegal()) {
-		updateGameState();
-		//Update display, displaying current play or winner or tie
-		printGameResult();
+		if(updateGameState()) printGameResult();		
 		if(isGameActive()) changeToNextPlayer();
 	}
 }
@@ -180,8 +181,11 @@ void Game::printCurrentPlayerName() {
 	std::cout << "( " << players[static_cast<unsigned int>(currentPlayer)].getSymbol() << " )";
 }
 void Game::printGameResult() {
-	Utility::cursorTo(grid.getLastDisplayRow() + 1, 0);
+	utility.cursorTo(ttt.getLastDisplayRow() + 1, 0);
 	switch (gameState) {
+	case GameState::PENDING_GAME:
+		std::cout << "NEW GAME!!!\n";
+		break;
 	case GameState::GAME_ABANDONNED:
 		std::cout << "Game Cancelled\n";
 		break;
@@ -195,7 +199,6 @@ void Game::printGameResult() {
 		break;
 	}
 	if(isSessionOver()) std::cout << "Thanks for playing\n";
-	std::cout << std::endl;
 }
 bool Game::processInput() {
 	switch (userEntry) {
@@ -277,7 +280,7 @@ void Game::run(){
 			//Session loop
 			while (1) {
 				//Automated play loop
-				grid.blank();
+				ttt.blank();
 				randomizeCurrentPlayer();
 				while (isGameActive()) {
 					//Game loop
@@ -324,7 +327,7 @@ void Game::setSessionStateZeroPlayer(){
 	players[1].setPlayer(COM_PLAYER, PLAYER2_DEFAULT_NAME);
 }
 bool Game::setUserEntryFromCellNum(unsigned int cellNum) { 
-	if (cellNum < grid.GetNumCells()) {
+	if (cellNum < ttt.GetNumCells()) {
 		userEntry = cellNum + 48;
 		return true;
 	}
@@ -346,22 +349,22 @@ bool Game::setUserEntryFromAlphaNumKeyCode(char keyCode) {
 }
 void Game::setWinner(unsigned int a) {
 	//a is index of winning symbol
-	if (grid.getEntry(a) == players[0].getSymbol()) winner = static_cast<unsigned int>(PLAYER::ONE);
+	if (ttt.getEntry(a) == players[0].getSymbol()) winner = static_cast<unsigned int>(PLAYER::ONE);
 	else winner = static_cast<unsigned int>(PLAYER::TWO);
 	gameState = GameState::GAME_WON;
 }
 void Game::updateEntries(){
-	if(grid.newEntry(userEntry - 48, players[static_cast<unsigned int>(currentPlayer)].getSymbol())) setMoveIsLegal();
+	if(ttt.newEntry(userEntry - 48, players[static_cast<unsigned int>(currentPlayer)].getSymbol())) setMoveIsLegal();
 }
-void Game::updateGameState() {
+bool Game::updateGameState() {
 	//Check grid for win or tie, set game state accordingly
 	//Game over
 	//Was it a win? if not, it is a tie
+	bool foundResult = true;
 	bool isWin = false;
-	for (int i = 0; i == 0; i++) {
-		//This loop designed to execute only once
+	while(1) {
 		//Might be a tie
-		if (grid.isGridFull()) {
+		if (ttt.isGridFull()) {
 			gameState = GameState::GAME_TIED;
 			break;
 		}
@@ -376,6 +379,8 @@ void Game::updateGameState() {
 		//Diagonals 0=4=8, 2=4=6
 		if (isWin = isLine(0, 4, 8)) break;
 		if (isWin = isLine(2, 4, 6)) break;	
-		break; // should not be needed, loop only runs once
+		foundResult = false;
+		break; //loop only runs once
 	}
+	return foundResult;
 }
