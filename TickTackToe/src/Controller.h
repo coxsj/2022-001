@@ -1,111 +1,131 @@
 #pragma once
-
-#include <iostream>
-#include <memory>
+#include <vector>
+//#include<cstdlib>
 
 #include "Player.h"
-#include "Game.h"
-
-#ifdef DEBUG
-#define dout std::out
-#else
-//If the preprocessor replaces 'dout' with '0 && cout',
-//<< has higher precedence than && and short-circuit evaluation of && makes the 
-//whole line evaluate to 0. Since the 0 is not used the compiler generates 
-//no code at all for that line.
-#define dout 0 && std::cout 
-#endif
+#include "score.h"
+#include "ticktacktoegrid.h"
+#include "Utility.h"
 
 class Controller
 {
-private:
-#define MAX_PLAYERS 2
-	unsigned int				numPlayers;
-	std::unique_ptr<Player[]>	players;
-	std::unique_ptr<Game>		game;
-	std::string					name;
-#define DEFAULT_NAME "new_controller"
-	bool						quit;
-	std::string					userEntry;
+	//Players
+	enum class PLAYER : unsigned int {
+		ONE = 0,
+		TWO = 1
+	};
+	std::vector<Player>	players;
+	const unsigned int	PLAYER_ONE				= 0;
+	const unsigned int	PLAYER_TWO				= PLAYER_ONE + 1;
+	const char*			PLAYER1_DEFAULT_NAME	= "Player1";
+	const char*			PLAYER2_DEFAULT_NAME	= "Player2";
+	const bool			COM_PLAYER				= true;
+	const bool			HUMAN_PLAYER			= !COM_PLAYER;
+	PLAYER 				currentPlayer;
+	unsigned int		winner;
+	
+	//Scores
+	std::vector<Score> scores;
+
+	//Game
+	enum class GameState{
+		PENDING_GAME,
+		ACTIVE_GAME,
+		GAME_ABANDONNED,
+		GAME_WON,
+		GAME_TIED
+	};
+	GameState		gameState;
+	bool			moveLegal;
+	
+	//Session
+	enum class SessionState {
+		PENDING_SESSION,
+		ONE_PLAYER_SESSION,
+		TWO_PLAYER_SESSION,
+		AUTOMATED_SESSION,
+		NEW_SESSION_REQUESTED,
+		SESSION_OVER
+	};
+	SessionState	sessionState;
+	
+	//Grid
+	TickTackToeGrid	ttt;
+	const char		PLAYER1_DEFAULT_SYMBOL = 'X';
+	const char		PLAYER2_DEFAULT_SYMBOL = 'O';
+
+	//Game info
+	Utility::ConsolePos gameInfoPos;
+	const short cMaxGameInfoChars = 40;
+	std::string gameInfoBlankingStr;
+
+	//Input
+	unsigned int userEntry;
+	Utility::ConsolePos getSessionInputPos;
+	const short cMaxUserInputChars = 40;
+	std::string inputPromptBlankingStr;
+	std::vector<Utility::ConsolePos> getPlayerNamePos;
+
+	//Utility
+	Utility utility;
+
 public:
+	Controller() { initController(); }
 
-	/*
-	std::unique_ptr<Base> ptr;  //points to Derived or some other derived class
-
-	//rule of five
-	~Foo() = default;
-	Foo(Foo const& other) : ptr(other.ptr->clone()) {}
-	Foo(Foo && other) = default;
-	Foo& operator=(Foo const& other) { ptr = other.ptr->clone(); return *this; }
-	Foo& operator=(Foo && other) = default;
-
-	*/
-	//Constructors
-	Controller() {
-		initController();
-		dout << "Controller Default constructor of "; printNameLn();
-	}
-	Controller(unsigned int players) {
-		dout << "Controller Default constructor with int of "; printNameLn();
-		initController(players);
-	}
-	//Copy constructor
-	Controller(const Controller& other) {
-		initController(other.playerCount());
-		dout << "Controller Copy constructor from "; other.printNameLn();
-		rename(other.name + "_copy");
-	}
-	//Move constructor
-	Controller(Controller&& rhs) noexcept {
-		players = std::exchange(rhs.players, nullptr);
-		game = std::exchange(rhs.game, nullptr);
-		name = std::exchange(rhs.name, "husk(Empty and deletable)");
-		dout << "Controller Move constructor from "; printNameLn();
-	}
-	//Destructor
-	~Controller() { dout << "Controller Destructor of "; printNameLn(); }
-	//By-val assignment operator overload
-	Controller& operator=(Controller copy) {
-		dout << "Controller by-value assignment (=) operator copying from "; copy.printNameLn();
-		copy.swap(*this);
-		return *this;
-	}
-	//Member swap method
-	void swap(Controller& rhs) noexcept {
-		dout << "Swapping "; this->printName(); dout << "with "; rhs.printNameLn();
-		using std::swap;
-		swap(players, rhs.players);
-		swap(game, rhs.game);
-		swap(name, rhs.name);
-	}
-	//Two argument swap makes this type efficiently std::swappable
-	// This is a non member function using the hidden friend idiom.
-	// The friend function is in the body of our class ie in its namespace
-	// Marking as friend lets the compiler know it is not a member
-	friend void swap(Controller& a, Controller& b) noexcept {
-		//Just calls the member swap
-		a.swap(b);
-	}
-	void play();
-	unsigned int playerCount() const { return numPlayers; }
-	void printName() const {
-		if (name.size() > 0) dout << name << " ";
-		else dout << "not_named ";
-	}
-	void printNameLn() const { printName();  dout << std::endl; }
-	void rename(const std::string& newName) {
-		printName();
-		dout << "renamed to ";
-		name = newName;
-		printNameLn();
-	}
+	void run();
+	
 private:
-	void initController(const unsigned int numP = MAX_PLAYERS) {
-		numPlayers = numP;
-		players = std::make_unique<Player[]>(numP);
-		game = std::make_unique<Game>();
-		name = std::string(DEFAULT_NAME);
-		quit = false;
-		userEntry = "";
-	}
+	bool blockRowOfTwo();
+	void changeToNextPlayer();
+	void changeSides();
+	void comMoveAdvanced();
+	void comMoveIntermediate();
+	void comMoveNovice();
+	void drawGame() { ttt.printEntryList(); ttt.drawGrid(); printGameResult(); }
+	void endCurrentGame();
+	void findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax);
+	bool getASyncInput();
+	const char getCurrentSymbol() { return players[static_cast<unsigned int>(currentPlayer)].getSymbol(); }
+	PLAYER getOpponentPlayer() { return currentPlayer == PLAYER::ONE ? PLAYER::TWO : PLAYER::ONE; }
+	const char getOpponentSymbol() { return players[static_cast<unsigned int>(getOpponentPlayer())].getSymbol(); }
+	void getPostGameInputFromUser();
+	void getPlayerName(unsigned int player);
+	void getMoveInput();
+	void getMoveInputFromCom();
+	void getMoveInputFromHuman();
+	void getNewSessionFromUser();
+	void initController();
+	void initGame();
+	void initGameInfo();
+	void initGetUserInput();
+	void initPlayers();
+	void initSession();
+	void initUtility();
+	bool isGameActive() { return gameState == GameState::ACTIVE_GAME; }
+	bool isGamePending() { return gameState == GameState::PENDING_GAME; }
+	bool isLine(unsigned int a, unsigned int b, unsigned int c);
+	bool isSessionOver() { return sessionState == SessionState::SESSION_OVER; }
+	bool makeRowOfThree();
+	bool makeTwoInARow();
+	bool moveIsLegal() { return moveLegal; }
+	void newGame();
+	void nextMove();
+	bool newSessionRequest() { return sessionState == SessionState::NEW_SESSION_REQUESTED; }
+	void printCurrentPlayerName();
+	void printGameResult();
+	bool processInput();
+	void randomizeCurrentPlayer();
+	void resetMoveIsLegal() { moveLegal = false; }
+	void setSessionEnd() { sessionState = SessionState::SESSION_OVER; }
+	void setGamePending() { gameState = GameState::PENDING_GAME; }
+	void setMoveIsLegal() { moveLegal = true; }
+	void setNamesGamesWithHumans(const unsigned int numPlayers);
+	void setSessionStateZeroPlayer();
+	bool setUserEntryFromCellNum(unsigned int cellNum);
+	bool setUserEntryFromAlphaKeyCode(char keyCode);
+	bool setUserEntryFromAlphaNumKeyCode(char keyCode);
+	void setWinner(unsigned int a);
+	void updateEntries();
+	bool updateGameState();
 };
+

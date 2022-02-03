@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <ctime>
 
 #include "Utility.h"
 
@@ -49,4 +50,8 @@ void Utility::printNChars(const unsigned int& num, const char& c) {
     for (auto i = 0; i < num; i++) {
         std::cout << c;
     }
+}
+void Utility::randomSeed() {
+    //Randomize computer random cell picker
+    srand(static_cast<unsigned int>(time(0)));
 }

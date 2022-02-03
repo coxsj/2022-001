@@ -38,6 +38,7 @@ public:
     static unsigned int const GetConsoleCursorPositionV() { return GetConsoleCursorPosition().Y; }
     void printAt(const short atV, const short atH, std::string s);
     void printNChars(const unsigned int& num, const char& c);
+    void randomSeed();
     void restoreStoredCursorPos() { cursorTo(storedCursorPos); }
     void storeCursorPos() { storedCursorPos = GetConsoleCursorPosition(); }
 };

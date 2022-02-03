@@ -1,10 +1,8 @@
 #include <iostream>
-#include "Game.h"
+#include "Controller.h"
 
 
 int main() {
-	
-	Game t;
+	Controller t;
 	t.run();
-
 }
