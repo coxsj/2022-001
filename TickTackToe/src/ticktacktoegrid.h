@@ -30,11 +30,11 @@ class TickTackToeGrid {
 	const short	cNumVSpacePadding = 1; //Number of vertical spaces surrounding an entry
 	const short cNumHDividerChars = 1;
 	const short cNumVDividerChars = 1;
-	const short	cNumDisplayRows = cNumVGridCells * (cNumVSpacePadding * 2 + cNumEntryCharsInCell) + (cNumVGridCells - 1);	//Grid rows - 1 as no divider at bottom of grid
 	const short cDisplayHStride = cNumEntryCharsInCell + cNumHDividerChars + 2 * cNumHSpacePadding;
 	const short cDisplayVStride = cNumEntryCharsInCell + cNumVDividerChars + 2 * cNumVSpacePadding;
 	const short cMaxHGridLineLabelWithPadding = 4;
-	const short cNumDisplayCols = cNumHGridCells * (cNumHSpacePadding * 2 + 1) + (cNumHGridCells - 1);	//3 cols, each with 1 entries 2x spaceCnt, 2 dividers
+	const short cNumGridDisplayCols = cNumHGridCells * (cNumHSpacePadding * 2 + 1) + (cNumHGridCells - 1);	//3 cols, each with 1 entries 2x spaceCnt, 2 dividers
+	const short	cNumGridDisplayRows = cNumVGridCells * (cNumVSpacePadding * 2 + cNumEntryCharsInCell) + (cNumVGridCells - 1);	//Grid rows - 1 as no divider at bottom of grid
 	short firstEntryRow;
 	short firstEntryCol;
 	short firstGridCellCol;
@@ -59,6 +59,7 @@ class TickTackToeGrid {
 public:
 	TickTackToeGrid() { initTTT(); };
 
+	bool addNewEntry(unsigned int index, char symbol);
 	void blank();
 	void blankEntryListDisplay();
 	void blankGrid();
@@ -68,14 +69,13 @@ public:
 	std::vector<unsigned int> getEmptyCells();
 	std::vector<char> getEntries() { return entries; }
 	char getEntry(unsigned int index) { return entries[index]; }
-	unsigned int const getLastDisplayRow() { return gridPos.getLineAfter(); }
+	unsigned int const getLnieAfterGrid() { return gridPos.getLineAfter(); }
 	size_t GetNumCells() { return cNumGridCells; }
 	std::vector<unsigned int> getLineCompletions(char symbol);
 	std::vector<unsigned int> getMakeTwoLines(char symbol);
 	bool isEntryOpen(const unsigned int index) { return entries[index] == cEndtriesDefaultChar; }
 	bool isGridFull();
 	bool isLine(unsigned int a, unsigned int b, unsigned int c) { return (entries[a] == entries[b]) && (entries[a] == entries[c]) && (entries[a] != cEndtriesDefaultChar); }
-	bool newEntry(unsigned int index, char symbol);
 	void printEntryList();
 	void setDividerDouble() { divSingle = false; }
 	void setDividerSingle() { divSingle = true;  }

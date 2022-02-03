@@ -5,6 +5,15 @@
 #include "ticktacktoegrid.h"
 #include "utility.h"
 
+bool TickTackToeGrid::addNewEntry(unsigned int index, char symbol) {
+	//entry is in range?
+	if (index >= cNumGridCells) return false;
+	//Cell is open?
+	if (entries[index] != cEndtriesDefaultChar) return false;
+	entries[index] = symbol;
+	printNewEntry(index, symbol);
+	return true;
+}
 void TickTackToeGrid::blank() {
 	clearEntries();
 	for (auto i = 0; i < cNumGridCells; i++)
@@ -36,11 +45,11 @@ void TickTackToeGrid::drawGrid() {
 	char vDivCh		= divSingle ? cDividerVChar		: cDividerDblVChar;
 	//Go screen line by line
 	utility.cursorTo(gridPos.getV(), gridPos.getH());
-	for (unsigned int i = 0; i < cNumDisplayRows; i++) {
+	for (unsigned int i = 0; i < cNumGridDisplayRows; i++) {
 		//Row loop
 		printGridLineLabel(i);
 		//Draw chars in this row
-		for (unsigned int j = 0; j < cNumDisplayCols; j++) {
+		for (unsigned int j = 0; j < cNumGridDisplayCols; j++) {
 			//Column loop
 			if ((i + 1) % cDisplayVStride == 0) {
 				//Row of horizontal dividers?
@@ -66,7 +75,7 @@ void TickTackToeGrid::drawGrid() {
 				}
 			}
 		}
-		std::cout << std::endl;
+		if(i != cNumGridDisplayRows -1) std::cout << std::endl;
 	}
 }
 void TickTackToeGrid::clearEntries() {
@@ -136,8 +145,8 @@ void TickTackToeGrid::initGrid(){
 	//Set default position off grid (including line labels) relative to entryList
 	gridPos.setV(entryListPos.getLineAfter());
 	gridPos.setH(0);
-	gridPos.setVlen(cNumVGridCells);
-	gridPos.setHlen(cNumVGridCells);
+	gridPos.setVlen(cNumGridDisplayRows);
+	gridPos.setHlen(cMaxHGridLineLabelWithPadding + cNumGridDisplayCols);
 	
 	//Abs position of Cell 0 entry
 	short hPosFirstGridEntry = gridPos.getH() + cMaxHGridLineLabelWithPadding + cNumHSpacePadding + cNumEntryCharsInCell - 1;
@@ -146,7 +155,7 @@ void TickTackToeGrid::initGrid(){
 	//Set positions of each grid entry for fast updating
 	for (auto i = 0; i < cNumGridCells; i++) {
 		//base horizontal position + cell col number * horizontal stride
-		entryHPos.push_back(hPosFirstGridEntry + (i / cNumHGridCells) * cDisplayHStride);
+		entryHPos.push_back(hPosFirstGridEntry + (i % cNumHGridCells) * cDisplayHStride);
 		//base vertical position + cell row number * horizontal stride
 		entryVPos.push_back(vPosFirstGridEntry + (i / cNumVGridCells) * cDisplayVStride);
 	}
@@ -161,15 +170,6 @@ void TickTackToeGrid::initTitle(){
 bool TickTackToeGrid::isGridFull() {
 	auto it = std::find(entries.begin(), entries.end(), cEndtriesDefaultChar);
 	return it == entries.end();
-}
-bool TickTackToeGrid::newEntry(unsigned int index, char symbol) {
-	//entry is in range?
-	if (index >= cNumGridCells) return false;
-	//Cell is open?
-	if (entries[index] != cEndtriesDefaultChar) return false;
-	entries[index] = symbol;
-	printNewEntry(index, symbol);
-	return true;
 }
 const int TickTackToeGrid::oneInLine(char symbol, unsigned int a, unsigned int b, unsigned int c) {
 	//Seeking a line with only one of my symbols the rest blanks. If so, return the index of my symbol.

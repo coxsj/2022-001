@@ -30,6 +30,13 @@ void Controller::changeSides() {
 
 	//swap(player[0], player[1]);
 }
+void Controller::clearPostGameText() {
+	utility.cursorTo(postGameInputPos.getV(), postGameInputPos.getH()); 
+	for (auto i = 0; i < postGameInputPos.getVlen(); i++) {
+		std::cout << inputPromptBlankingStr;
+		if (i != postGameInputPos.getVlen() - 1) std::cout << std::endl;
+	}
+}
 void Controller::comMoveAdvanced() {
 	//Todo: replace this code with Advanced strategy
 	comMoveNovice();
@@ -56,8 +63,10 @@ void Controller::comMoveNovice() {
 	else setUserEntryFromAlphaKeyCode('b');
 }
 void Controller::endCurrentGame() {
-	if (isGameActive()) gameState = GameState::GAME_ABANDONNED; 
-	else GameState::PENDING_GAME;
+	if (isGameActive()) {
+		gameState = GameState::GAME_ABANDONNED;
+		printGameInfo();
+	}
 }
 void Controller::findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax){
 	for (auto i = 0; i < ttt.GetNumCells(); i++) {
@@ -71,15 +80,15 @@ bool Controller::getASyncInput() {
 	//Peek first, if char there read it else return false
 	//std::cin >> std::ws;  // eat up any leading white spaces
 	if (_kbhit()) {
-		setUserEntryFromAlphaNumKeyCode(_getch());
-		processInput();
-		return true;
+		setUserEntryFromAlphaKeyCode(_getch());
+		processInput(); //ignore whether a command was found
+		return true; //return true regardless of whether the key is a command key
 	}
 	return false;
 }
 void Controller::getNewSessionFromUser() {
 	int numPlayers = 99;	//ensures user prompt
-	utility.cursorTo(getSessionInputPos.getV(), getSessionInputPos.getH());
+	utility.cursorTo(sessionInputPos.getV(), sessionInputPos.getH());
 	utility.storeCursorPos();
 	std::string howManyPlayersStr("How many players? (0, 1, 2) ");
 	while (numPlayers > 2) {
@@ -89,7 +98,7 @@ void Controller::getNewSessionFromUser() {
 	}
 	std::cout << inputPromptBlankingStr;
 	utility.restoreStoredCursorPos();
-	std::cout << std::endl;
+	std::cout << numPlayers << " Players";
 	if (numPlayers == 0) setSessionStateZeroPlayer();
 	else setNamesGamesWithHumans(numPlayers);
 }
@@ -97,24 +106,30 @@ void Controller::getPlayerName(unsigned int playerNum) {
 	if (playerNum > PLAYER_TWO) return;
 	std::string inputStr;
 	std::string enterNameStr("Enter Player" + std::to_string(playerNum + 1) + std::string(" name ( ") + players[playerNum].getSymbol() + " ): ");
-	utility.cursorTo(getPlayerNamePos[playerNum].getV(), getPlayerNamePos[playerNum].getH());
+	utility.cursorTo(playerNameInputPos[playerNum].getV(), playerNameInputPos[playerNum].getH());
 	utility.storeCursorPos();
-	while (1) {
+	while(1){
 		std::cout << enterNameStr;
 		std::cin >> std::ws;  // eat up any leading white spaces
 		std::cin >> inputStr;
 		utility.restoreStoredCursorPos();
 		if (inputStr.size() > 0) {
+			//Name entered
 			std::cout << inputPromptBlankingStr;
 			utility.restoreStoredCursorPos();
 			players[playerNum].setName(inputStr);
+			std::cout << players[playerNum].getName() << " is Player" << playerNum + 1 << " ( " << players[playerNum].getSymbol() << "s )";
 			break;
 		}
 	}
 }
 void Controller::getPostGameInputFromUser() {
 	//play another, change sides, new players, quit?
-	std::cout << "Play again(p)\nChange sides(c)\nNew players(n)\nQuit(q)\n";
+	utility.cursorTo(postGameInputPos.getV(), postGameInputPos.getH());
+	utility.storeCursorPos();
+	clearPostGameText();
+	utility.restoreStoredCursorPos();
+	std::cout << "Play again(p)\nChange sides(c)\nNew players(n)\nQuit(q)";
 	while (1) {
 		if (setUserEntryFromAlphaKeyCode(_getch())) break;
 	}
@@ -130,9 +145,13 @@ void Controller::getMoveInputFromCom() {
 }
 void Controller::getMoveInputFromHuman() {
 	unsigned int inputCode;
+	utility.cursorTo(gameInfoPos.getV(), gameInfoPos.getH());
+	utility.storeCursorPos();
 	while (1) {
-		utility.cursorTo(ttt.getLastDisplayRow() + 2, 0);	//Todo replace 1 with constant
-		printCurrentPlayerName(); std::cout << "'s move. Enter cell number..." << std::endl;
+		utility.restoreStoredCursorPos();
+		std::cout << inputPromptBlankingStr;
+		utility.restoreStoredCursorPos();
+		printCurrentPlayerName(); std::cout << "'s move. Enter cell number...";
 		inputCode = _getch();
 		if (setUserEntryFromAlphaNumKeyCode(inputCode)) break;
 	}
@@ -150,7 +169,7 @@ void Controller::initGame() {
 	gameState = GameState::PENDING_GAME;
 }
 void Controller::initGameInfo() {
-	gameInfoPos.setV(ttt.getLastDisplayRow() + 1);
+	gameInfoPos.setV(ttt.getLnieAfterGrid());
 	gameInfoPos.setH(0);
 	gameInfoPos.setVlen(2);
 	gameInfoPos.setHlen(cMaxGameInfoChars);
@@ -159,23 +178,33 @@ void Controller::initGameInfo() {
 		gameInfoBlankingStr.push_back(' ');
 }
 void Controller::initGetUserInput() {
-	getSessionInputPos.setV(gameInfoPos.getLineAfter());
-	getSessionInputPos.setH(0);
-	getSessionInputPos.setVlen(3);
-	getSessionInputPos.setHlen(cMaxUserInputChars);
+	//Set up blanking string for user input
 	for (auto i = 0; i < cMaxUserInputChars; i++)
 		inputPromptBlankingStr.push_back(' ');
+	
+	//Session info prompts
+	sessionInputPos.setV(gameInfoPos.getLineAfter());
+	sessionInputPos.setH(0);
+	sessionInputPos.setVlen(1);
+	sessionInputPos.setHlen(cMaxUserInputChars);
+	
 	//Get player name prompts
-	getPlayerNamePos.push_back(Utility::ConsolePos()); //input pos for player 1 name prompt
-	getPlayerNamePos.push_back(Utility::ConsolePos()); //input pos for player 2 name prompt
-	getPlayerNamePos[PLAYER_ONE].setV(getSessionInputPos.getLineAfter());
-	getPlayerNamePos[PLAYER_ONE].setH(0);
-	getPlayerNamePos[PLAYER_ONE].setVlen(1);
-	getPlayerNamePos[PLAYER_ONE].setHlen(cMaxUserInputChars);
-	getPlayerNamePos[PLAYER_TWO].setV(getPlayerNamePos[PLAYER_ONE].getLineAfter());
-	getPlayerNamePos[PLAYER_TWO].setH(0);
-	getPlayerNamePos[PLAYER_TWO].setVlen(1);
-	getPlayerNamePos[PLAYER_TWO].setHlen(cMaxUserInputChars);
+	playerNameInputPos.push_back(Utility::ConsolePos()); //input pos for player 1 name prompt
+	playerNameInputPos.push_back(Utility::ConsolePos()); //input pos for player 2 name prompt
+	playerNameInputPos[PLAYER_ONE].setV(sessionInputPos.getLineAfter());
+	playerNameInputPos[PLAYER_ONE].setH(0);
+	playerNameInputPos[PLAYER_ONE].setVlen(1);
+	playerNameInputPos[PLAYER_ONE].setHlen(cMaxUserInputChars);
+	playerNameInputPos[PLAYER_TWO].setV(playerNameInputPos[PLAYER_ONE].getLineAfter());
+	playerNameInputPos[PLAYER_TWO].setH(0);
+	playerNameInputPos[PLAYER_TWO].setVlen(1);
+	playerNameInputPos[PLAYER_TWO].setHlen(cMaxUserInputChars);
+
+	//Post game prompts
+	postGameInputPos.setV(gameInfoPos.getLineAfter());
+	postGameInputPos.setH(0);
+	postGameInputPos.setVlen(4);
+	postGameInputPos.setHlen(cMaxUserInputChars);
 }
 void Controller::initPlayers()
 {
@@ -220,7 +249,6 @@ bool Controller::makeTwoInARow() {
 	return false;
 }
 void Controller::newGame() {
-	drawGame();
 	gameState = GameState::ACTIVE_GAME;
 }
 void Controller::nextMove() {
@@ -228,7 +256,7 @@ void Controller::nextMove() {
 	getMoveInput();
 	processInput();
 	if (moveIsLegal()) {
-		if(updateGameState()) printGameResult();		
+		if(updateGameState()) printGameInfo();		
 		if(isGameActive()) changeToNextPlayer();
 	}
 }
@@ -236,10 +264,11 @@ void Controller::printCurrentPlayerName() {
 	std::cout << players[static_cast<unsigned int>(currentPlayer)].getName();
 	std::cout << "( " << players[static_cast<unsigned int>(currentPlayer)].getSymbol() << " )";
 }
-void Controller::printGameResult() {
+void Controller::printGameInfo() {
 	utility.cursorTo(gameInfoPos.getV(), gameInfoPos.getH());
 	utility.storeCursorPos();
 	std::cout << gameInfoBlankingStr;
+	utility.restoreStoredCursorPos();
 	switch (gameState) {
 	case GameState::PENDING_GAME:
 		std::cout << "NEW GAME!!!\n";
@@ -256,7 +285,6 @@ void Controller::printGameResult() {
 	default:
 		break;
 	}
-	if(isSessionOver()) std::cout << "Thanks for playing\n";
 }
 bool Controller::processInput() {
 	switch (userEntry) {
@@ -330,41 +358,48 @@ void Controller::randomizeCurrentPlayer() {
 	currentPlayer = ((double)rand() / (RAND_MAX)) < 0.5f ? PLAYER::ONE : PLAYER::TWO;
 }
 void Controller::run(){
-	while (!isSessionOver()) {
-		getNewSessionFromUser();
-		//Draw new game
-		newGame();
-		while (1){
-			//Session loop
-			while (1) {
-				//Automated play loop
-				ttt.blank();
-				randomizeCurrentPlayer();
-				while (isGameActive()) {
-					//Game loop
-					nextMove();
-				}
+	drawGame();
+	setSessionRequested();
+	while (!isSessionOver()){
+		//Session loop
+		if(isNewSessionRequested()) getNewSessionFromUser();
+		while (1) {
+			//Automated play loop
+			newGame();
+			ttt.blank();
+			randomizeCurrentPlayer();
+			while (isGameActive()) {
+				//Game loop
+				nextMove();
 				if (sessionState == SessionState::AUTOMATED_SESSION) {
-					if (getASyncInput()) endCurrentGame();
-					else setGamePending();
+					if (getASyncInput()) {
+						endCurrentGame();
+						setSessionRequested();
+					}
 				}
-				if (isGamePending()) continue;
-				else break;
-				//End of automated play loop
+				//End of game loop
 			}
-			if (newSessionRequest() || isSessionOver()) break;
-			
-			//Todo Show cumulative Scores, 
-
-			//Play another, change sides, new players, quit?
-			while (1) {
-				getPostGameInputFromUser();
-				if (processInput()) break;
-			}
-			if (newSessionRequest() || isSessionOver()) break;
+			if (sessionState == SessionState::AUTOMATED_SESSION) setGamePending();
+			if (isGamePending()) continue;
+			else break;
+			//End of automated play loop
 		}
+		if (isSessionOver()) break;
+			
+		//Todo Show cumulative Scores, 
+
+		while (1) {
+			getPostGameInputFromUser(); //Play another, change sides, new players, quit?
+			if (processInput()) {
+				clearPostGameText();
+				break;
+			}
+		}
+		//Todo: Save score history for each player?
+
+		if (isSessionOver()) break;
 	}
-	//Todo: Save score history for each player?
+	std::cout << "Thanks for playing\n";
 }
 void Controller::setNamesGamesWithHumans(const unsigned int numPlayers) {
 	//1 & 2 player sessions both have humans as player[0]
@@ -412,7 +447,7 @@ void Controller::setWinner(unsigned int a) {
 	gameState = GameState::GAME_WON;
 }
 void Controller::updateEntries(){
-	if(ttt.newEntry(userEntry - 48, players[static_cast<unsigned int>(currentPlayer)].getSymbol())) setMoveIsLegal();
+	if(ttt.addNewEntry(userEntry - 48, players[static_cast<unsigned int>(currentPlayer)].getSymbol())) setMoveIsLegal();
 }
 bool Controller::updateGameState() {
 	//Check grid for win or tie, set game state accordingly

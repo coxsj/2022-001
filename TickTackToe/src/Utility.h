@@ -14,7 +14,7 @@ public:
     public:
         short getH() { return H; }
         short getHlen() { return hLength; }
-        short getLineAfter() { return V + vLength + 1; }
+        short getLineAfter() { return V + vLength; }
         short getV() { return V; }
         short getVlen() { return vLength; }
         void setH(short newH) { H = newH; }
