@@ -19,13 +19,9 @@ void TickTackToeGrid::blank() {
 	for (auto i = 0; i < cNumGridCells; i++)
 		printNewEntry(i, cSpaceChar);
 }
-void TickTackToeGrid::blankEntryListDisplay() {
-	for (auto i = 0; i < cNumGridCells; i++)
-		printNewEntryOnEntryList(i, cSpaceChar);
-}
-void TickTackToeGrid::blankGrid() {
-	for (auto i = 0; i < cNumGridCells; i++)
-		printNewEntryOnGrid(i, cSpaceChar);
+void TickTackToeGrid::clearEntries() {
+	for (char& c : entries)
+		c = cEndtriesDefaultChar;
 }
 void TickTackToeGrid::clearEntryListDisplay() {
 	//Move cursor to start position of Entry List
@@ -77,10 +73,6 @@ void TickTackToeGrid::drawGrid() {
 		}
 		if(i != cNumGridDisplayRows -1) std::cout << std::endl;
 	}
-}
-void TickTackToeGrid::clearEntries() {
-	for (char& c : entries)
-		c = cEndtriesDefaultChar;
 }
 std::vector<unsigned int> TickTackToeGrid::getEmptyCells() {
 	std::vector<unsigned int> emptyCells;

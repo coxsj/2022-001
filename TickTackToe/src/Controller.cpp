@@ -17,8 +17,8 @@ bool Controller::blockRowOfTwo() {
 }
 void Controller::changeToNextPlayer() {
 	if (gameState != GameState::ACTIVE_GAME) return;
-	if (currentPlayer == PLAYER::ONE) currentPlayer = PLAYER::TWO;
-	else currentPlayer = PLAYER::ONE;
+	if (currentPlayer == cPlayerNumOne) currentPlayer = cPlayerNumTwo;
+	else currentPlayer = cPlayerNumOne;
 }
 void Controller::changeSides() {
 	//Todo
@@ -63,10 +63,8 @@ void Controller::comMoveNovice() {
 	else setUserEntryFromAlphaKeyCode('b');
 }
 void Controller::endCurrentGame() {
-	if (isGameActive()) {
-		gameState = GameState::GAME_ABANDONNED;
-		printGameInfo();
-	}
+	gameState = GameState::GAME_ABANDONNED;
+	printGameInfo();
 }
 void Controller::findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax){
 	for (auto i = 0; i < ttt.GetNumCells(); i++) {
@@ -103,7 +101,7 @@ void Controller::getNewSessionFromUser() {
 	else setNamesGamesWithHumans(numPlayers);
 }
 void Controller::getPlayerName(unsigned int playerNum) {
-	if (playerNum > PLAYER_TWO) return;
+	if (playerNum > cPlayerNumTwo) return;
 	std::string inputStr;
 	std::string enterNameStr("Enter Player" + std::to_string(playerNum + 1) + std::string(" name ( ") + players[playerNum].getSymbol() + " ): ");
 	utility.cursorTo(playerNameInputPos[playerNum].getV(), playerNameInputPos[playerNum].getH());
@@ -191,14 +189,14 @@ void Controller::initGetUserInput() {
 	//Get player name prompts
 	playerNameInputPos.push_back(Utility::ConsolePos()); //input pos for player 1 name prompt
 	playerNameInputPos.push_back(Utility::ConsolePos()); //input pos for player 2 name prompt
-	playerNameInputPos[PLAYER_ONE].setV(sessionInputPos.getLineAfter());
-	playerNameInputPos[PLAYER_ONE].setH(0);
-	playerNameInputPos[PLAYER_ONE].setVlen(1);
-	playerNameInputPos[PLAYER_ONE].setHlen(cMaxUserInputChars);
-	playerNameInputPos[PLAYER_TWO].setV(playerNameInputPos[PLAYER_ONE].getLineAfter());
-	playerNameInputPos[PLAYER_TWO].setH(0);
-	playerNameInputPos[PLAYER_TWO].setVlen(1);
-	playerNameInputPos[PLAYER_TWO].setHlen(cMaxUserInputChars);
+	playerNameInputPos[cPlayerNumOne].setV(sessionInputPos.getLineAfter());
+	playerNameInputPos[cPlayerNumOne].setH(0);
+	playerNameInputPos[cPlayerNumOne].setVlen(1);
+	playerNameInputPos[cPlayerNumOne].setHlen(cMaxUserInputChars);
+	playerNameInputPos[cPlayerNumTwo].setV(playerNameInputPos[cPlayerNumOne].getLineAfter());
+	playerNameInputPos[cPlayerNumTwo].setH(0);
+	playerNameInputPos[cPlayerNumTwo].setVlen(1);
+	playerNameInputPos[cPlayerNumTwo].setHlen(cMaxUserInputChars);
 
 	//Post game prompts
 	postGameInputPos.setV(gameInfoPos.getLineAfter());
@@ -210,11 +208,12 @@ void Controller::initPlayers()
 {
 	players.push_back(Player());	// create player 1
 	players.push_back(Player());	// create player 2
-	players[0].setSymbol(PLAYER1_DEFAULT_SYMBOL);
-	players[1].setSymbol(PLAYER2_DEFAULT_SYMBOL);
+	players[0].setSymbol(PLAYER_NUM1_DEFAULT_SYMBOL);
+	players[1].setSymbol(PLAYER_NUM2_DEFAULT_SYMBOL);
 }
 void Controller::initSession() {
 	sessionState = SessionState::PENDING_SESSION;
+	sessionNum = 0;
 }
 void Controller::initUtility() {
 	utility.randomSeed();
@@ -249,14 +248,23 @@ bool Controller::makeTwoInARow() {
 	return false;
 }
 void Controller::newGame() {
-	gameState = GameState::ACTIVE_GAME;
+	if (!players[cPlayerNumOne].canPlay() || !players[cPlayerNumTwo].canPlay()) {
+		endCurrentGame();
+	}
+	else {
+		gameState = GameState::ACTIVE_GAME;
+		gameResult.setOutcome(GameResult::Outcomes::eUndefined);
+	}
 }
 void Controller::nextMove() {
 	if (gameState != GameState::ACTIVE_GAME) return;
 	getMoveInput();
 	processInput();
 	if (moveIsLegal()) {
-		if(updateGameState()) printGameInfo();		
+		if (updateGameState()) {
+			updatePlayerResults();
+			printGameInfo();
+		}
 		if(isGameActive()) changeToNextPlayer();
 	}
 }
@@ -355,7 +363,7 @@ bool Controller::processInput() {
 	return true;
 }
 void Controller::randomizeCurrentPlayer() {
-	currentPlayer = ((double)rand() / (RAND_MAX)) < 0.5f ? PLAYER::ONE : PLAYER::TWO;
+	currentPlayer = ((double)rand() / (RAND_MAX)) < 0.5f ? cPlayerNumOne : cPlayerNumTwo;
 }
 void Controller::run(){
 	drawGame();
@@ -403,21 +411,28 @@ void Controller::run(){
 }
 void Controller::setNamesGamesWithHumans(const unsigned int numPlayers) {
 	//1 & 2 player sessions both have humans as player[0]
-	sessionState = SessionState::ONE_PLAYER_SESSION;
-	players[PLAYER_ONE].setHuman();
-	getPlayerName(PLAYER_ONE);
-	if (numPlayers == 1) players[PLAYER_TWO].setPlayer(COM_PLAYER, PLAYER2_DEFAULT_NAME);
+	sessionState = SessionState::ONE_PLAYER_NUM_SESSION;
+	players[cPlayerNumOne].setHuman();
+	getPlayerName(cPlayerNumOne);
+	if (numPlayers == 1) players[cPlayerNumTwo].setPlayer(cComPlayer, cPlayer2DefaultName);
 	else {
 		//2 players
-		sessionState = SessionState::TWO_PLAYER_SESSION;
-		players[PLAYER_TWO].setHuman();
-		getPlayerName(PLAYER_TWO);
+		sessionState = SessionState::TWO_PLAYER_NUM_SESSION;
+		players[cPlayerNumTwo].setHuman();
+		getPlayerName(cPlayerNumTwo);
 	}
+}
+void Controller::setSessionStateZeroPlayer(SessionState newSessionState) {
+	
+	if ((newSessionState != sessionState) && newSessionState == SessionState::
+	sessionNum
+	sessionState = newSessionState;
+	
 }
 void Controller::setSessionStateZeroPlayer(){
 	sessionState = SessionState::AUTOMATED_SESSION;
-	players[0].setPlayer(COM_PLAYER, PLAYER1_DEFAULT_NAME);
-	players[1].setPlayer(COM_PLAYER, PLAYER2_DEFAULT_NAME);
+	players[0].setPlayer(cComPlayer, cPlayer1DefaultName);
+	players[1].setPlayer(cComPlayer, cPlayer2DefaultName);
 }
 bool Controller::setUserEntryFromCellNum(unsigned int cellNum) { 
 	if (cellNum < ttt.GetNumCells()) {
@@ -442,9 +457,11 @@ bool Controller::setUserEntryFromAlphaNumKeyCode(char keyCode) {
 }
 void Controller::setWinner(unsigned int a) {
 	//a is index of winning symbol
-	if (ttt.getEntry(a) == players[0].getSymbol()) winner = static_cast<unsigned int>(PLAYER::ONE);
-	else winner = static_cast<unsigned int>(PLAYER::TWO);
+	if (ttt.getEntry(a) == players[0].getSymbol()) winner = static_cast<unsigned int>(cPlayerNumOne);
+	else winner = static_cast<unsigned int>(cPlayerNumTwo);
 	gameState = GameState::GAME_WON;
+	gameResult.setSessionNum(sessionNum);
+	gameResult.setOutcome(GameResult::Outcomes::eWin);
 }
 void Controller::updateEntries(){
 	if(ttt.addNewEntry(userEntry - 48, players[static_cast<unsigned int>(currentPlayer)].getSymbol())) setMoveIsLegal();
@@ -476,4 +493,9 @@ bool Controller::updateGameState() {
 		break; //loop only runs once
 	}
 	return foundResult;
+}
+void Controller::updatePlayerResults() {
+	if (gameResult.getOutcome() == GameResult::Outcomes::eUndefined) return;
+	//Add the results of the current game to each player
+	players[winner].enterResult(gameResult)
 }

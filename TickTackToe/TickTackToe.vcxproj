@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\GameResult.cpp" />
+    <ClCompile Include="src\scoreboard.cpp" />
     <ClCompile Include="src\SJCBaseClass.cpp" />
     <ClCompile Include="src\Controller.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -28,6 +30,8 @@
     <ClCompile Include="src\Utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\GameResult.h" />
+    <ClInclude Include="src\scoreboard.h" />
     <ClInclude Include="src\SJCBaseClass.h" />
     <ClInclude Include="src\Controller.h" />
     <ClInclude Include="src\Player.h" />

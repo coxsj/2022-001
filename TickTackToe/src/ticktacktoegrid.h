@@ -61,8 +61,6 @@ public:
 
 	bool addNewEntry(unsigned int index, char symbol);
 	void blank();
-	void blankEntryListDisplay();
-	void blankGrid();
 	void clearEntries();
 	void drawGame();
 	void drawGrid();

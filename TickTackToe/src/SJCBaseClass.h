@@ -18,7 +18,7 @@
 class SJCBaseClass
 {
 private:
-#define MAX_PLAYERS 2
+#define MAX_PLAYER_NUMS 2
 	unsigned int				numPlayers;
 	std::unique_ptr<Player[]>	players;
 	std::string					name;
@@ -96,7 +96,7 @@ public:
 		printNameLn();
 	}
 private:
-	void initSJCBaseClass(const unsigned int numP = MAX_PLAYERS) {
+	void initSJCBaseClass(const unsigned int numP = MAX_PLAYER_NUMS) {
 		numPlayers = numP;
 		players = std::make_unique<Player[]>(numP);
 		name = std::string(DEFAULT_NAME);

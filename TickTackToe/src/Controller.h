@@ -2,6 +2,8 @@
 #include <vector>
 //#include<cstdlib>
 
+
+#include "GameResult.h"
 #include "Player.h"
 #include "score.h"
 #include "ticktacktoegrid.h"
@@ -10,22 +12,18 @@
 class Controller
 {
 	//Players
-	enum class PLAYER : unsigned int {
-		ONE = 0,
-		TWO = 1
-	};
 	std::vector<Player>	players;
-	const unsigned int	PLAYER_ONE				= 0;
-	const unsigned int	PLAYER_TWO				= PLAYER_ONE + 1;
-	const char*			PLAYER1_DEFAULT_NAME	= "Player1";
-	const char*			PLAYER2_DEFAULT_NAME	= "Player2";
-	const bool			COM_PLAYER				= true;
-	const bool			HUMAN_PLAYER			= !COM_PLAYER;
-	PLAYER 				currentPlayer;
+	const unsigned int	cPlayerNumOne = 0;
+	const unsigned int	cPlayerNumTwo = 1;
+	const char*			cPlayer1DefaultName	= "Player1";	//Needed to name com players
+	const char*			cPlayer2DefaultName	= "Player2";	//Needed to name com players
+	const bool			cComPlayer			= true;
+	const bool			cHumanPlayer		= !cComPlayer;
+	unsigned int		currentPlayer;
 	unsigned int		winner;
 	
-	//Scores
-	std::vector<Score> scores;
+	//Scoreboard
+	std::vector<Score> scoreboard;
 
 	//Game
 	enum class GameState{
@@ -41,19 +39,23 @@ class Controller
 	//Session
 	enum class SessionState {
 		PENDING_SESSION,
-		ONE_PLAYER_SESSION,
-		TWO_PLAYER_SESSION,
+		ONE_PLAYER_NUM_SESSION,
+		TWO_PLAYER_NUM_SESSION,
 		AUTOMATED_SESSION,
 		NEW_SESSION_REQUESTED,
 		SESSION_OVER
 	};
-	SessionState	sessionState;
+	SessionState sessionState;
+	unsigned int sessionNum;
 	
-	//Grid
+	//Game
 	TickTackToeGrid	ttt;
-	const char		PLAYER1_DEFAULT_SYMBOL = 'X';
-	const char		PLAYER2_DEFAULT_SYMBOL = 'O';
+	const char		PLAYER_NUM1_DEFAULT_SYMBOL = 'X';
+	const char		PLAYER_NUM2_DEFAULT_SYMBOL = 'O';
 
+	//Game Result
+	GameResult gameResult;
+	
 	//Input General
 	unsigned int userEntry;
 	const short cMaxUserInputChars = 40;
@@ -94,7 +96,7 @@ private:
 	void findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax);
 	bool getASyncInput();
 	const char getCurrentSymbol() { return players[static_cast<unsigned int>(currentPlayer)].getSymbol(); }
-	PLAYER getOpponentPlayer() { return currentPlayer == PLAYER::ONE ? PLAYER::TWO : PLAYER::ONE; }
+	unsigned int getOpponentPlayer() { return currentPlayer == cPlayerNumOne ? cPlayerNumTwo : cPlayerNumOne; }
 	const char getOpponentSymbol() { return players[static_cast<unsigned int>(getOpponentPlayer())].getSymbol(); }
 	void getPostGameInputFromUser();
 	void getPlayerName(unsigned int player);
@@ -136,5 +138,6 @@ private:
 	void setWinner(unsigned int a);
 	void updateEntries();
 	bool updateGameState();
+	void updatePlayerResults();
 };
 
