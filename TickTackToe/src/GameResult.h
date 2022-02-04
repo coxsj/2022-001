@@ -13,6 +13,7 @@ public:
 	Outcomes getOutcome() { return outcome; }
 	unsigned int getSessionNum() { return sessionNum; }
 	void setOutcome(Outcomes newOutcome) { outcome = newOutcome; }
+	void setSession_Num(unsigned int newSessionNum) { sessionNum = newSessionNum; }
 private:
 	unsigned int sessionNum;
 	Outcomes outcome;

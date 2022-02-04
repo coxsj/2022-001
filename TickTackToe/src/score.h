@@ -8,7 +8,7 @@ class Score
 public:
 	Score() : games(0), ties(0), wins(0) {}
 
-	void print();
-	void printHeading();
+	void print_();
+	void print_Heading();
 };
 

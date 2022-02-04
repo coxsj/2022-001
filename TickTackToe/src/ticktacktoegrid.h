@@ -57,12 +57,12 @@ class TickTackToeGrid {
 	Utility utility;
 
 public:
-	TickTackToeGrid() { initTTT(); };
+	TickTackToeGrid() { init_TTT(); };
 
 	bool addNewEntry(unsigned int index, char symbol);
 	void blank();
 	void clearEntries();
-	void drawGame();
+	void gamePlay_DrawGame();
 	void drawGrid();
 	std::vector<unsigned int> getEmptyCells();
 	std::vector<char> getEntries() { return entries; }
@@ -73,34 +73,34 @@ public:
 	std::vector<unsigned int> getMakeTwoLines(char symbol);
 	bool isEntryOpen(const unsigned int index) { return entries[index] == cEndtriesDefaultChar; }
 	bool isGridFull();
-	bool isLine(unsigned int a, unsigned int b, unsigned int c) { return (entries[a] == entries[b]) && (entries[a] == entries[c]) && (entries[a] != cEndtriesDefaultChar); }
-	void printEntryList();
+	bool strategy_IsLine(unsigned int a, unsigned int b, unsigned int c) { return (entries[a] == entries[b]) && (entries[a] == entries[c]) && (entries[a] != cEndtriesDefaultChar); }
+	void print_EntryList();
 	void setDividerDouble() { divSingle = false; }
 	void setDividerSingle() { divSingle = true;  }
 	
 private:
 	void clearEntryListDisplay();
-	void initEntryList();
-	void initEntryVector();
-	void initGrid();
-	void initTitle();
-	void initTTT() {
+	void init_EntryList();
+	void init_EntryVector();
+	void init_Grid();
+	void init_Title();
+	void init_TTT() {
 		//Title
-		initTitle();
+		init_Title();
 		//Entry vector
-		initEntryVector();
+		init_EntryVector();
 		//Entry List
-		initEntryList();
+		init_EntryList();
 		//Initialize grid with single line dividers
-		initGrid();
+		init_Grid();
 	}
 	const int oneInLine(char symbol, unsigned int a, unsigned int b, unsigned int c);
 	const int pendingLine(const char symbol, const unsigned int a, const unsigned int b, const unsigned int c);
-	void const printGameName();
-	void const printGridLineLabel(unsigned int i);
-	void const printNewEntry (const unsigned int& index, const char& symboll);
-	void const printNewEntryOnEntryList(const unsigned int& index, const char& symbol);
-	void const printNewEntryOnGrid (const unsigned int& index, const char& symbol);
+	void const print_GameName();
+	void const print_GridLineLabel(unsigned int i);
+	void const print_NewEntry (const unsigned int& index, const char& symboll);
+	void const print_NewEntryOnEntryList(const unsigned int& index, const char& symbol);
+	void const print_NewEntryOnGrid (const unsigned int& index, const char& symbol);
 	void processOneInLine(char symbol, std::vector < unsigned int>& vec, unsigned int a, unsigned int b, unsigned int c);
 	
 	};

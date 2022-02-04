@@ -22,14 +22,14 @@ void Utility::cursorTo(const short newV, const short newH) {
     cursorTo(destCoord);
 }
 void Utility::cursorTo(COORD newCoord) {
-    //initialize objects for cursor manipulation
+    //init_ialize objects for cursor manipulation
     HANDLE hStdout;
     hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     //position cursor at new position
     SetConsoleCursorPosition(hStdout, newCoord);
 }
 COORD Utility::GetConsoleCursorPosition(){
-    //initialize objects for cursor manipulation
+    //init_ialize objects for cursor manipulation
     HANDLE hStdout;
     COORD destCoord;
     hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -42,11 +42,11 @@ COORD Utility::GetConsoleCursorPosition(){
         return invalid;
     }
 }
-void Utility::printAt(const short atV, const short atH, std::string s) {
+void Utility::print_At(const short atV, const short atH, std::string s) {
     cursorTo(atV, atH);
     std::cout << s;
 }
-void Utility::printNChars(const unsigned int& num, const char& c) {
+void Utility::print_NChars(const unsigned int& num, const char& c) {
     for (auto i = 0; i < num; i++) {
         std::cout << c;
     }

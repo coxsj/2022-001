@@ -11,13 +11,13 @@ bool TickTackToeGrid::addNewEntry(unsigned int index, char symbol) {
 	//Cell is open?
 	if (entries[index] != cEndtriesDefaultChar) return false;
 	entries[index] = symbol;
-	printNewEntry(index, symbol);
+	print_NewEntry(index, symbol);
 	return true;
 }
 void TickTackToeGrid::blank() {
 	clearEntries();
 	for (auto i = 0; i < cNumGridCells; i++)
-		printNewEntry(i, cSpaceChar);
+		print_NewEntry(i, cSpaceChar);
 }
 void TickTackToeGrid::clearEntries() {
 	for (char& c : entries)
@@ -26,11 +26,11 @@ void TickTackToeGrid::clearEntries() {
 void TickTackToeGrid::clearEntryListDisplay() {
 	//Move cursor to start position of Entry List
 	utility.cursorTo(entryListPos.getV(), entryListPos.getH());
-	//Print spaces to maximum length of list including separators and spaces
+	//print_ spaces to maximum length of list including separators and spaces
 	std::cout << entryListBlankingString;
 }
-void TickTackToeGrid::drawGame() {
-	printEntryList();
+void TickTackToeGrid::gamePlay_DrawGame() {
+	print_EntryList();
 	drawGrid();
 }
 void TickTackToeGrid::drawGrid() {
@@ -43,7 +43,7 @@ void TickTackToeGrid::drawGrid() {
 	utility.cursorTo(gridPos.getV(), gridPos.getH());
 	for (unsigned int i = 0; i < cNumGridDisplayRows; i++) {
 		//Row loop
-		printGridLineLabel(i);
+		print_GridLineLabel(i);
 		//Draw chars in this row
 		for (unsigned int j = 0; j < cNumGridDisplayCols; j++) {
 			//Column loop
@@ -116,7 +116,7 @@ std::vector<unsigned int> TickTackToeGrid::getMakeTwoLines(char symbol) {
 	processOneInLine(symbol, retVec, 2, 4, 6);
 	return retVec;
 }
-void TickTackToeGrid::initEntryList(){
+void TickTackToeGrid::init_EntryList(){
 	entryListSeparatorStr = ", ";
 	int numChars = (cNumGridCells * cNumEntryCharsInCell) + (cNumGridCells - 1) * sizeof(entryListSeparatorStr);
 	for (int i = 0; i < numChars; i++)
@@ -127,11 +127,11 @@ void TickTackToeGrid::initEntryList(){
 	entryListPos.setHlen(numChars);
 	cEntryListStride = entryListSeparatorStr.size() + cNumEntryCharsInCell;
 }
-void TickTackToeGrid::initEntryVector() {
+void TickTackToeGrid::init_EntryVector() {
 	for (int i = 0; i < cNumGridCells; i++)
 		entries.push_back(cEndtriesDefaultChar);
 }
-void TickTackToeGrid::initGrid(){
+void TickTackToeGrid::init_Grid(){
 	//Default to single dividers
 	divSingle = true;
 	//Set default position off grid (including line labels) relative to entryList
@@ -152,12 +152,12 @@ void TickTackToeGrid::initGrid(){
 		entryVPos.push_back(vPosFirstGridEntry + (i / cNumVGridCells) * cDisplayVStride);
 	}
 }
-void TickTackToeGrid::initTitle(){
+void TickTackToeGrid::init_Title(){
 	titlePos.setV(0);
 	titlePos.setH(0);
 	titlePos.setVlen(1 + cNumTitleExtraLines);
 	titlePos.setHlen(1);
-	printGameName();
+	print_GameName();
 }
 bool TickTackToeGrid::isGridFull() {
 	auto it = std::find(entries.begin(), entries.end(), cEndtriesDefaultChar);
@@ -193,18 +193,18 @@ const int TickTackToeGrid::pendingLine(const char symbol, const unsigned int a, 
 	//No match for any pattern of two symbols and a space in this line
 	return -1;
 }
-void TickTackToeGrid::printEntryList() {
+void TickTackToeGrid::print_EntryList() {
 	//Move cursor to start position
 	utility.cursorTo(entryListPos.getV(), entryListPos.getH());
 	for (char c : entries)
 		std::cout << c << entryListSeparatorStr;
 }
-void const TickTackToeGrid::printGameName() {
-	utility.printAt(titlePos.getV(), titlePos.getH(), "TickTackToe\n");
+void const TickTackToeGrid::print_GameName() {
+	utility.print_At(titlePos.getV(), titlePos.getH(), "TickTackToe\n");
 	for (int i = 0; i < cNumTitleExtraLines; i++)
 		std::cout << std::endl;
 }
-void const TickTackToeGrid::printGridLineLabel(unsigned int n){
+void const TickTackToeGrid::print_GridLineLabel(unsigned int n){
 	std::string outStr;
 	//Space to line up row labels for small numbers
 	if (n < 10) outStr.push_back(' ');
@@ -214,18 +214,18 @@ void const TickTackToeGrid::printGridLineLabel(unsigned int n){
 		outStr.push_back(' ');
 	std::cout << outStr;
 }
-void const TickTackToeGrid::printNewEntry (const unsigned int& index, const char& symbol) {
-	//Print new entry
-	printNewEntryOnEntryList(index, symbol);
+void const TickTackToeGrid::print_NewEntry (const unsigned int& index, const char& symbol) {
+	//print_ new entry
+	print_NewEntryOnEntryList(index, symbol);
 	//Update entry on grid
-	printNewEntryOnGrid(index, symbol);
+	print_NewEntryOnGrid(index, symbol);
 }
-void const TickTackToeGrid::printNewEntryOnEntryList(const unsigned int& index, const char& symbol) {
-	//Print new entry on entry list
+void const TickTackToeGrid::print_NewEntryOnEntryList(const unsigned int& index, const char& symbol) {
+	//print_ new entry on entry list
 	utility.cursorTo(entryListPos.getV(), entryListPos.getH() + cEntryListStride * index);
 	std::cout << symbol;
 }
-void const TickTackToeGrid::printNewEntryOnGrid(const unsigned int& index, const char& symbol) {
+void const TickTackToeGrid::print_NewEntryOnGrid(const unsigned int& index, const char& symbol) {
 	//Update entry on grid
 	utility.cursorTo(entryVPos[index], entryHPos[index]);
 	std::cout << symbol;

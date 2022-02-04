@@ -6,7 +6,7 @@ class Scoreboard
 public:
 	Scoreboard()  {}
 
-	void print();
-	void printHeading();
+	void print_();
+	void print_Heading();
 };
 

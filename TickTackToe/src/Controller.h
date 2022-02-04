@@ -27,8 +27,8 @@ class Controller
 
 	//Game
 	enum class GameState{
-		PENDING_GAME,
-		ACTIVE_GAME,
+		GAME_PENDING,
+		GAME_ACTIVE,
 		GAME_ABANDONNED,
 		GAME_WON,
 		GAME_TIED
@@ -38,11 +38,11 @@ class Controller
 	
 	//Session
 	enum class SessionState {
-		PENDING_SESSION,
-		ONE_PLAYER_NUM_SESSION,
-		TWO_PLAYER_NUM_SESSION,
-		AUTOMATED_SESSION,
-		NEW_SESSION_REQUESTED,
+		SESSION_PENDING,
+		SESSION_ONE_PLAYER,
+		SESSION_TWO_PLAYERS,
+		SESSION_AUTOMATED,
+		SESSION_REQUEST_NEW,
 		SESSION_OVER
 	};
 	SessionState sessionState;
@@ -59,7 +59,7 @@ class Controller
 	//Input General
 	unsigned int userEntry;
 	const short cMaxUserInputChars = 40;
-	std::string inputPromptBlankingStr;
+	std::string inputprompt_BlankingStr;
 
 	//Input: Game info
 	Utility::ConsolePos gameInfoPos;
@@ -79,65 +79,69 @@ class Controller
 	Utility utility;
 
 public:
-	Controller() { initController(); }
+	Controller() { init_Controller(); }
 
 	void run();
 	
 private:
-	bool blockRowOfTwo();
-	void changeToNextPlayer();
-	void changeSides();
-	void clearPostGameText();
-	void comMoveAdvanced();
-	void comMoveIntermediate();
-	void comMoveNovice();
-	void drawGame() { ttt.printEntryList(); ttt.drawGrid(); printGameInfo(); }
-	void endCurrentGame();
-	void findMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax);
-	bool getASyncInput();
-	const char getCurrentSymbol() { return players[static_cast<unsigned int>(currentPlayer)].getSymbol(); }
-	unsigned int getOpponentPlayer() { return currentPlayer == cPlayerNumOne ? cPlayerNumTwo : cPlayerNumOne; }
-	const char getOpponentSymbol() { return players[static_cast<unsigned int>(getOpponentPlayer())].getSymbol(); }
-	void getPostGameInputFromUser();
-	void getPlayerName(unsigned int player);
-	void getMoveInput();
-	void getMoveInputFromCom();
-	void getMoveInputFromHuman();
-	void getNewSessionFromUser();
-	void initController();
-	void initGame();
-	void initGameInfo();
-	void initGetUserInput();
-	void initPlayers();
-	void initSession();
-	void initUtility();
-	bool isGameActive() { return gameState == GameState::ACTIVE_GAME; }
-	bool isGamePending() { return gameState == GameState::PENDING_GAME; }
-	bool isLine(unsigned int a, unsigned int b, unsigned int c);
-	bool isNewSessionRequested() { return sessionState == SessionState::NEW_SESSION_REQUESTED; }
+	void gamePlay_ChangeSides();
+	void gamePlay_ChangeToNextPlayer();
+	void gamePlay_DrawGame() { ttt.print_EntryList(); ttt.drawGrid(); print_GameInfo(); }
+	void gamePlay_EndCurrentGame();
+	void gamePlay_GetNextMove();
+	bool gamePlay_IsMoveLegal() { return moveLegal; }
+	void gamePlay_NewGame();
+	void gamePlay_NextMove();
+	bool gamePlay_ProcessMove();
+	void gamePlay_RandomizeCurrentPlayer();
+	void gamePlay_ResetMoveIsLegal() { moveLegal = false; }
+	void gamePlay_SetMoveIsLegal() { moveLegal = true; }
+	void gamePlay_SetWinner(unsigned int a);
+	void gamePlay_UpdateEntries();
+	void gamePlay_UpdatePlayerResults();
+	void init_Controller();
+	void init_Game();
+	void init_GameInfo();
+	void init_Players();
+	void init_prompt_s();
+	void init_Session();
+	void init_Utility();
+	bool isGameActive() { return gameState == GameState::GAME_ACTIVE; }
+	bool isGamePending() { return gameState == GameState::GAME_PENDING; }
+	bool isSessionAutomated() { return sessionState == SessionState::SESSION_AUTOMATED; }
+	bool isSessionOnePlayer() { return sessionState == SessionState::SESSION_ONE_PLAYER; }
 	bool isSessionOver() { return sessionState == SessionState::SESSION_OVER; }
-	bool makeRowOfThree();
-	bool makeTwoInARow();
-	bool moveIsLegal() { return moveLegal; }
-	void newGame();
-	void nextMove();
-	void printCurrentPlayerName();
-	void printGameInfo();
-	bool processInput();
-	void randomizeCurrentPlayer();
-	void resetMoveIsLegal() { moveLegal = false; }
-	void setGamePending() { gameState = GameState::PENDING_GAME; }
-	void setMoveIsLegal() { moveLegal = true; }
-	void setNamesGamesWithHumans(const unsigned int numPlayers);
-	void setSessionEnd() { sessionState = SessionState::SESSION_OVER; }
-	void setSessionRequested() { sessionState = SessionState::NEW_SESSION_REQUESTED; }
-	void setSessionStateZeroPlayer();
-	bool setUserEntryFromCellNum(unsigned int cellNum);
-	bool setUserEntryFromAlphaKeyCode(char keyCode);
-	bool setUserEntryFromAlphaNumKeyCode(char keyCode);
-	void setWinner(unsigned int a);
-	void updateEntries();
-	bool updateGameState();
-	void updatePlayerResults();
+	bool isSessionPending() {return sessionState == SessionState::SESSION_PENDING; }
+	bool isSessionRequestNew() { return sessionState == SessionState::SESSION_REQUEST_NEW; }
+	bool isSessionTwoPlayers() { return sessionState == SessionState::SESSION_TWO_PLAYERS; }
+	unsigned int playerCurrentPlayerOpponent() { return currentPlayer == cPlayerNumOne ? cPlayerNumTwo : cPlayerNumOne; }
+	const char playerCurrentPlayerSymbol() { return players[(currentPlayer)].getSymbol(); }
+	const char playerOpponentSymbol() { return players[(playerCurrentPlayerOpponent())].getSymbol(); }
+	void print_CurrentPlayerName();
+	void print_GameInfo();
+	void prompt_ClearPostGameText();
+	bool prompt_GetAsyncInput();
+	void prompt_NewSessionType();
+	void prompt_NextMove();
+	void prompt_PostGame();
+	void prompt_PlayerName(unsigned int player);
+	bool prompt_ProcessInput();
+	bool prompt_SetUserEntryFromCellNum(unsigned int cellNum);
+	bool prompt_SetUserEntryFromAlphaKeyCode(char keyCode);
+	bool prompt_SetUserEntryFromAlphaNumKeyCode(char keyCode);
+	void setGameState(GameState newGameState) { gameState = newGameState; }
+	void setSession_State(Controller::SessionState newSessionState);
+	void setSession_TypeOneOrTwoPlayers(const unsigned int numPlayers);
+	void setSession_TypeZeroPlayer();
+	void strategy_Advanced();
+	bool strategy_BlockRowOfTwo();
+	void strategy_FindMax(const std::vector<unsigned int>& vec, unsigned int& maxSoFar, unsigned int& indexOfMax);
+	void strategy_Intermediate();
+	bool strategy_IsLine(unsigned int a, unsigned int b, unsigned int c);
+	bool strategy_MakeRowOfThree();
+	bool strategy_MakeTwoInARow();
+	void strategy_NextMoveFromCom();
+	void strategy_Novice();
+	
 };
 

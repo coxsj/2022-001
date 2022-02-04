@@ -40,36 +40,36 @@ public:
 	*/
 	//Constructors
 	SJCBaseClass() {
-		initSJCBaseClass();
-		dout << "SJCBaseClass Default constructor of "; printNameLn();
+		init_SJCBaseClass();
+		dout << "SJCBaseClass Default constructor of "; print_NameLn();
 	}
 	SJCBaseClass(unsigned int players) {
-		dout << "SJCBaseClass Default constructor with int of "; printNameLn();
-		initSJCBaseClass(players);
+		dout << "SJCBaseClass Default constructor with int of "; print_NameLn();
+		init_SJCBaseClass(players);
 	}
 	//Copy constructor
 	SJCBaseClass(const SJCBaseClass& other) {
-		initSJCBaseClass(other.playerCount());
-		dout << "SJCBaseClass Copy constructor from "; other.printNameLn();
+		init_SJCBaseClass(other.playerCount());
+		dout << "SJCBaseClass Copy constructor from "; other.print_NameLn();
 		rename(other.name + "_copy");
 	}
 	//Move constructor
 	SJCBaseClass(SJCBaseClass&& rhs) noexcept {
 		players = std::exchange(rhs.players, nullptr);
 		name = std::exchange(rhs.name, "husk(Empty and deletable)");
-		dout << "SJCBaseClass Move constructor from "; printNameLn();
+		dout << "SJCBaseClass Move constructor from "; print_NameLn();
 	}
 	//Destructor
-	~SJCBaseClass() { dout << "SJCBaseClass Destructor of "; printNameLn(); }
+	~SJCBaseClass() { dout << "SJCBaseClass Destructor of "; print_NameLn(); }
 	//By-val assignment operator overload
 	SJCBaseClass& operator=(SJCBaseClass copy) {
-		dout << "SJCBaseClass by-value assignment (=) operator copying from "; copy.printNameLn();
+		dout << "SJCBaseClass by-value assignment (=) operator copying from "; copy.print_NameLn();
 		copy.swap(*this);
 		return *this;
 	}
 	//Member swap method
 	void swap(SJCBaseClass& rhs) noexcept {
-		dout << "Swapping "; this->printName(); dout << "with "; rhs.printNameLn();
+		dout << "Swapping "; this->print_Name(); dout << "with "; rhs.print_NameLn();
 		using std::swap;
 		swap(players, rhs.players);
 		swap(name, rhs.name);
@@ -84,19 +84,19 @@ public:
 	}
 	void play();
 	unsigned int playerCount() const { return numPlayers; }
-	void printName() const {
+	void print_Name() const {
 		if (name.size() > 0) dout << name << " ";
 		else dout << "not_named ";
 	}
-	void printNameLn() const { printName();  dout << std::endl; }
+	void print_NameLn() const { print_Name();  dout << std::endl; }
 	void rename(const std::string& newName) {
-		printName();
+		print_Name();
 		dout << "renamed to ";
 		name = newName;
-		printNameLn();
+		print_NameLn();
 	}
 private:
-	void initSJCBaseClass(const unsigned int numP = MAX_PLAYER_NUMS) {
+	void init_SJCBaseClass(const unsigned int numP = MAX_PLAYER_NUMS) {
 		numPlayers = numP;
 		players = std::make_unique<Player[]>(numP);
 		name = std::string(DEFAULT_NAME);
