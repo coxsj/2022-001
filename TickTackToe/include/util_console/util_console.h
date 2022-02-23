@@ -27,7 +27,7 @@ public:
 
 class ConsoleTextBlock {
 private:
-    std::string blankingStr;
+    //std::string blankingStr;
     short hLength;
     short vLength;
 
@@ -36,7 +36,7 @@ protected:
     short V;
 
 public:
-    ConsoleTextBlock(short newV = 0, short newH = 0, short newvLen = 1, short newhLen = 1) : H(newH), V(newV), vLength(newvLen), blankingStr("") { setHlen(newhLen); }
+    ConsoleTextBlock(short newV = 0, short newH = 0, short newvLen = 1, short newhLen = 1) : H(newH), V(newV), vLength(newvLen) { setHlen(newhLen); }
     virtual ~ConsoleTextBlock()=default;
     void blankAll();
     void blankLine(int lineNum=0);
@@ -49,16 +49,13 @@ public:
     short getVlen() { return vLength; }
     void print_At(const short lineNum, const std::string& s);
     void setH(short newH) { H = newH;}
-    void setHlen(short newHlen) { hLength = newHlen; fillBlankingStr(newHlen);}
+    void setHlen(short newHlen) { hLength = newHlen; }
     void setV(short newV) { V = newV; }
     void setVlen(short newVlen) { vLength = newVlen; }
 
 protected:
     void cursorTo(const short newV = 0, const short newH = 0);
     void cursorToLine(const short lineNum=0) {  CursorUtil::cursorTo(V + lineNum, H); }
-    
-private:
-    void fillBlankingStr(short numBlanks);
 };
 
 class ConsoleBorder : public ConsoleTextBlock {
