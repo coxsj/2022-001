@@ -200,7 +200,8 @@ void TickTackToeGrid::print_EntryList() {
 		std::cout << c << entryListSeparatorStr;
 }
 void const TickTackToeGrid::print_GameName() {
-	utility.print_At(titlePos.getV(), titlePos.getH(), "TickTackToe\n");
+	std::string str("TickTackToe\n");
+	utility.print_At(titlePos.getV(), titlePos.getH(), str);
 	for (int i = 0; i < cNumTitleExtraLines; i++)
 		std::cout << std::endl;
 }

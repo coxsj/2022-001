@@ -42,9 +42,6 @@
     <ClCompile Include="src\PlayerResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Utilities\util_console\src\util_console.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\SJCBaseClass.h">
@@ -74,7 +71,7 @@
     <ClInclude Include="src\Outcomes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Utilities\util_console\src\util_console.h">
+    <ClInclude Include="include\util_console\util_console.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

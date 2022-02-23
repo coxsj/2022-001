@@ -7,11 +7,11 @@
 
 class TickTackToeGrid {
 	//Title
-	util_console::ConsoleTextBlock titlePos;
+	ConsoleTextBlock titlePos;
 	const short cNumTitleExtraLines = 1;
 
 	//Entry List
-	util_console::ConsoleTextBlock entryListPos;
+	ConsoleTextBlock entryListPos;
 	const short cNumEntrySpaces = 1;
 	const short cNumEntrySeparators = 1;
 	short cEntryListStride;
@@ -19,7 +19,7 @@ class TickTackToeGrid {
 	std::string entryListBlankingString;
 	
 	//Grid Display Location
-	util_console::ConsoleTextBlock gridPos;
+	ConsoleTextBlock gridPos;
 	
 	//Grid Sizing Parameters
 	const short	cNumVGridCells = 3;
@@ -54,7 +54,7 @@ class TickTackToeGrid {
 	std::vector<char> entries;
 	
 	//util_console
-	util_console utility;
+	CursorUtil utility;
 
 public:
 	TickTackToeGrid() { init_TTT(); };

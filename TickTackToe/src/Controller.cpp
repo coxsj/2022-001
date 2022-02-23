@@ -127,15 +127,13 @@ void Controller::init_GameInfo() {
 	gameInfoBlock.setH(0);
 	gameInfoBlock.setVlen(2);
 	gameInfoBlock.setHlen(cMaxGameInfoChars);
-	gameInfoBlock.fillBlankingStr(cMaxGameInfoChars);
-	gameInfoBlock.blank();
+	gameInfoBlock.blankAll();
 	
 	gamePlayInfoBlock.setV(gameInfoBlock.getLineAfter());
 	gamePlayInfoBlock.setH(0);
 	gamePlayInfoBlock.setVlen(2);
 	gamePlayInfoBlock.setHlen(cMaxGameInfoChars);
-	gamePlayInfoBlock.fillBlankingStr(cMaxGamePlayInfoChars);
-	gamePlayInfoBlock.blank();
+	gamePlayInfoBlock.blankAll();
 }
 void Controller::init_Players()
 {
@@ -150,41 +148,36 @@ void Controller::init_Prompts() {
 	sessionInfoBlock.setH(0);
 	sessionInfoBlock.setVlen(1);
 	sessionInfoBlock.setHlen(cMaxSessionInfoChars);
-	sessionInfoBlock.fillBlankingStr(cMaxUserInputChars);
-	sessionInfoBlock.blank();
+	sessionInfoBlock.blankAll();
 	
 	//Player name prompts
-	playerNamePromptBlock.push_back(util_console::ConsoleTextBlock()); //input pos for player 1 name prompt
-	playerNamePromptBlock.push_back(util_console::ConsoleTextBlock()); //input pos for player 2 name prompt
+	playerNamePromptBlock.push_back(ConsoleTextBlock()); //input pos for player 1 name prompt
+	playerNamePromptBlock.push_back(ConsoleTextBlock()); //input pos for player 2 name prompt
 	playerNamePromptBlock[cPlayerNumOne].setV(sessionInfoBlock.getLineAfter());
 	playerNamePromptBlock[cPlayerNumOne].setH(0);
 	playerNamePromptBlock[cPlayerNumOne].setVlen(1);
 	playerNamePromptBlock[cPlayerNumOne].setHlen(cMaxUserInputChars);
-	playerNamePromptBlock[cPlayerNumOne].fillBlankingStr(cMaxUserInputChars);
-	playerNamePromptBlock[cPlayerNumOne].blank();
+	playerNamePromptBlock[cPlayerNumOne].blankAll();
 
 	playerNamePromptBlock[cPlayerNumTwo].setV(playerNamePromptBlock[cPlayerNumOne].getLineAfter());
 	playerNamePromptBlock[cPlayerNumTwo].setH(0);
 	playerNamePromptBlock[cPlayerNumTwo].setVlen(1);
 	playerNamePromptBlock[cPlayerNumTwo].setHlen(cMaxUserInputChars);
-	playerNamePromptBlock[cPlayerNumTwo].fillBlankingStr(cMaxUserInputChars);
-	playerNamePromptBlock[cPlayerNumTwo].blank();
+	playerNamePromptBlock[cPlayerNumTwo].blankAll();
 
 	//Post game prompts
 	postGamePromptBlock.setV(gameInfoBlock.getLineAfter());
 	postGamePromptBlock.setH(0);
 	postGamePromptBlock.setVlen(4);
 	postGamePromptBlock.setHlen(cMaxUserInputChars);
-	postGamePromptBlock.fillBlankingStr(cMaxUserInputChars);
-	postGamePromptBlock.blank();
+	postGamePromptBlock.blankAll();
 
 	//Exit msg prompt
 	exitMsgBlock.setV(gameInfoBlock.getLineAfter());
 	exitMsgBlock.setH(0);
 	exitMsgBlock.setVlen(1);
 	exitMsgBlock.setHlen(cMaxUserInputChars);
-	exitMsgBlock.fillBlankingStr(cMaxUserInputChars);
-	exitMsgBlock.blank();
+	exitMsgBlock.blankAll();
 
 }
 void Controller::init_Session() {
@@ -199,7 +192,7 @@ void Controller::print_CurrentPlayerName() {
 	std::cout << "( " << players[static_cast<unsigned int>(currentPlayer)].getSymbol() << " )";
 }
 void Controller::print_GameInfo() {
-	gameInfoBlock.blank();
+	gameInfoBlock.blankAll();
 	std::cout << "Game " << gameNum << "  ";
 	switch (gameState) {
 	case GameState::State::GAME_PENDING:
@@ -219,11 +212,11 @@ void Controller::print_GameInfo() {
 	}
 }
 void Controller::printPlayerInfo(unsigned int playerNum){
-	playerNamePromptBlock[playerNum].blank();
+	playerNamePromptBlock[playerNum].blankAll();
 	std::cout << players[playerNum].getName() << " is Player" << playerNum + 1 << " ( " << players[playerNum].getSymbol() << "s )";
 }
 void Controller::printSessionInfo() {
-	sessionInfoBlock.blank();
+	sessionInfoBlock.blankAll();
 	switch (sessionState) {
 	case SessionState::State::SESSION_PENDING:
 
@@ -255,8 +248,8 @@ void Controller::prompt_AutomatedSessionInterrupted() {
 	}
 }
 void Controller::prompt_ExitMsg() {
-	postGamePromptBlock.blank();
-	exitMsgBlock.blank();
+	postGamePromptBlock.blankAll();
+	exitMsgBlock.blankAll();
 	std::cout << "So long. Thanks for playing!\n\n";
 }
 bool Controller::prompt_GetAsyncInput() {
@@ -271,7 +264,7 @@ bool Controller::prompt_GetAsyncInput() {
 }
 void Controller::prompt_NewSessionType() {
 	int numPlayers = 99;	//ensures user prompt_
-	sessionInfoBlock.blank();
+	sessionInfoBlock.blankAll();
 	std::cout << "How many players? (0, 1, 2) ";
 	utility.storeCursorPos();
 	while (numPlayers > 2) {
@@ -282,7 +275,7 @@ void Controller::prompt_NewSessionType() {
 	else setSession_TypeOneOrTwoPlayers(numPlayers);
 }
 void Controller::prompt_NextMove() {
-	gameInfoBlock.blank();
+	gameInfoBlock.blankAll();
 	print_CurrentPlayerName(); std::cout << "'s move. Enter cell number...";
 	utility.storeCursorPos();
 	while (1) {
@@ -292,7 +285,7 @@ void Controller::prompt_NextMove() {
 }
 void Controller::prompt_PlayerName(unsigned int playerNum) {
 	if (playerNum > cPlayerNumTwo) return;
-	playerNamePromptBlock[playerNum].blank();
+	playerNamePromptBlock[playerNum].blankAll();
 	std::cout << "Enter Player" << playerNum + 1 << " name ( " << players[playerNum].getSymbol() << " ): ";
 	utility.storeCursorPos();
 	std::string inputStr;
@@ -310,7 +303,7 @@ void Controller::prompt_PlayerName(unsigned int playerNum) {
 }
 void Controller::prompt_PostGame() {
 	//play another, change sides, new players, quit?
-	postGamePromptBlock.blank();
+	postGamePromptBlock.blankAll();
 	std::cout << "Play again(p)\nChange sides(c)\nNew players(n)\nQuit(q)";
 	utility.storeCursorPos();
 	while (1) {
@@ -427,7 +420,7 @@ void Controller::run(){
 		while (1) {
 			prompt_PostGame(); //Play another, change sides, new players, quit?
 			if (prompt_ProcessInput()) {
-				postGamePromptBlock.blank();
+				postGamePromptBlock.blankAll();
 				break;
 			}
 		}

@@ -126,28 +126,28 @@ class Controller
 	const short cMaxUserInputChars = 40;
 
 	//Game info
-	util_console::ConsoleTextBlock gameInfoBlock;
+	ConsoleTextBlock gameInfoBlock;
 	const short cMaxGameInfoChars = 40;
 
 	//GamePlay info
-	util_console::ConsoleTextBlock gamePlayInfoBlock;
+	ConsoleTextBlock gamePlayInfoBlock;
 	const short cMaxGamePlayInfoChars = 60;
 
 	//Info Session
-	util_console::ConsoleTextBlock sessionInfoBlock;
+	ConsoleTextBlock sessionInfoBlock;
 	const short cMaxSessionInfoChars = 40;
 
 	//Prompt: Player names
-	std::vector<util_console::ConsoleTextBlock> playerNamePromptBlock;
+	std::vector<ConsoleTextBlock> playerNamePromptBlock;
 
 	//Prompt: Post game
-	util_console::ConsoleTextBlock postGamePromptBlock;
+	ConsoleTextBlock postGamePromptBlock;
 
 	//Prompt: Exit
-	util_console::ConsoleTextBlock exitMsgBlock;
+	ConsoleTextBlock exitMsgBlock;
 
 	//util_console
-	util_console utility;
+	CursorUtil utility;
 
 public:
 	Controller() { init_Controller(); }
