@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "ticktacktoegrid.h"
-#include "utility.h"
+#include "util_console.h"
 
 bool TickTackToeGrid::addNewEntry(unsigned int index, char symbol) {
 	//entry is in range?

@@ -2,16 +2,16 @@
 #include <vector>
 #include <string>
 
-#include "Utility.h"
+#include "util_console.h"
 
 
 class TickTackToeGrid {
 	//Title
-	Utility::ConsolePos titlePos;
+	util_console::ConsoleTextBlock titlePos;
 	const short cNumTitleExtraLines = 1;
 
 	//Entry List
-	Utility::ConsolePos entryListPos;
+	util_console::ConsoleTextBlock entryListPos;
 	const short cNumEntrySpaces = 1;
 	const short cNumEntrySeparators = 1;
 	short cEntryListStride;
@@ -19,7 +19,7 @@ class TickTackToeGrid {
 	std::string entryListBlankingString;
 	
 	//Grid Display Location
-	Utility::ConsolePos gridPos;
+	util_console::ConsoleTextBlock gridPos;
 	
 	//Grid Sizing Parameters
 	const short	cNumVGridCells = 3;
@@ -53,8 +53,8 @@ class TickTackToeGrid {
 	bool divSingle = true;
 	std::vector<char> entries;
 	
-	//Utility
-	Utility utility;
+	//util_console
+	util_console utility;
 
 public:
 	TickTackToeGrid() { init_TTT(); };
@@ -67,7 +67,7 @@ public:
 	std::vector<unsigned int> getEmptyCells();
 	std::vector<char> getEntries() { return entries; }
 	char getEntry(unsigned int index) { return entries[index]; }
-	unsigned int const getLnieAfterGrid() { return gridPos.getLineAfter(); }
+	unsigned int const getLineAfterGrid() { return gridPos.getLineAfter(); }
 	size_t GetNumCells() { return cNumGridCells; }
 	std::vector<unsigned int> getLineCompletions(char symbol);
 	std::vector<unsigned int> getMakeTwoLines(char symbol);

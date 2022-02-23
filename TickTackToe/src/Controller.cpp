@@ -1,11 +1,14 @@
-#include <iostream>
+#include <chrono>
 #include <conio.h>
+#include <iostream>
 #include <string>
+#include <thread>
 
 #include "Controller.h"
-#include "utility.h"
+#include "Outcomes.h"
+#include "util_console.h"
 void Controller::gamePlay_ChangeToNextPlayer() {
-	if (gameState != GameState::GAME_ACTIVE) return;
+	if (!isGameActive()) return;
 	if (currentPlayer == cPlayerNumOne) currentPlayer = cPlayerNumTwo;
 	else currentPlayer = cPlayerNumOne;
 }
@@ -20,7 +23,9 @@ void Controller::gamePlay_ChangeSides() {
 	//swap(player[0], player[1]);
 }
 void Controller::gamePlay_EndCurrentGame() {
-	gameState = GameState::GAME_ABANDONNED;
+	if(isGameActive() || isGamePending())
+		setGameState(GameState::State::GAME_CANCELLED);
+		
 	print_GameInfo();
 }
 void Controller::gamePlay_GetNextMove() {
@@ -29,17 +34,23 @@ void Controller::gamePlay_GetNextMove() {
 	else prompt_NextMove();
 }
 void Controller::gamePlay_NewGame() {
+	ttt.blank();
 	if (!players[cPlayerNumOne].canPlay() || !players[cPlayerNumTwo].canPlay()) {
 		gamePlay_EndCurrentGame();
-		setSession_State(SessionState::SESSION_REQUEST_NEW);
+		setSession_State(SessionState::State::SESSION_REQUEST_NEW);
 	}
 	else {
-		gameState = GameState::GAME_ACTIVE;
-		gameResult.setOutcome(GameResult::Outcomes::eUndefined);
+		setGameState(GameState::State::GAME_ACTIVE);
+		gameNum++;
+		gamePlay_RandomizeCurrentPlayer();
+		//Update display
+		printSessionInfo();
+		printPlayerInfo(cPlayerNumOne);
+		printPlayerInfo(cPlayerNumTwo);
 	}
 }
 void Controller::gamePlay_NextMove() {
-	if (gameState != GameState::GAME_ACTIVE) return;
+	if (!isGameActive()) return;
 	gamePlay_GetNextMove();
 	prompt_ProcessInput();
 	if (gamePlay_IsMoveLegal()) {
@@ -59,7 +70,7 @@ bool Controller::gamePlay_ProcessMove() {
 	while(1) {
 		//Might be a tie
 		if (ttt.isGridFull()) {
-			gameState = GameState::GAME_TIED;
+			setGameState(GameState::State::GAME_TIED);
 			break;
 		}
 		//Rows 0=1=2, 3=4=5, 6=7=8
@@ -83,40 +94,48 @@ void Controller::gamePlay_RandomizeCurrentPlayer() {
 }
 void Controller::gamePlay_SetWinner(unsigned int a) {
 	//a is index of winning symbol
-	if (ttt.getEntry(a) == players[0].getSymbol()) winner = static_cast<unsigned int>(cPlayerNumOne);
-	else winner = static_cast<unsigned int>(cPlayerNumTwo);
-	gameState = GameState::GAME_WON;
-	gameResult.setSession_Num(sessionNum);
-	gameResult.setOutcome(GameResult::Outcomes::eWin);
+	winner = ttt.getEntry(a) == players[cPlayerNumOne].getSymbol() ? cPlayerNumOne : cPlayerNumTwo;
+	setGameState(GameState::State::GAME_WON);
 }
 void Controller::gamePlay_UpdatePlayerResults() {
-	if (gameResult.getOutcome() == GameResult::Outcomes::eUndefined) return;
+	if (gameResult.getOutcome() == Outcomes::eUndefined) return;
 	//Add the results of the current game to each player
-	players[winner].enterResult(gameResult);
+	players[winner].enterPlayerResult(PlayerResult(gameResult.getSessionNum(), gameResult.getOutcome()));
+	if(gameResult.getOutcome() == Outcomes::eTie)
+		players[gamePlay_getLoserIndex()].enterPlayerResult(PlayerResult(gameResult.getSessionNum(), Outcomes::eTie));
 }
 void Controller::gamePlay_UpdateEntries(){
 	if(ttt.addNewEntry(userEntry - 48, players[static_cast<unsigned int>(currentPlayer)].getSymbol())) gamePlay_SetMoveIsLegal();
 }
 void Controller::init_Controller() {
-	init_Utility();
-	init_Game();
-	init_Session();
-	init_Players();
+	//Order of these init routines matter
+	init_util_console();
+	//Establish where things will be drawn/written-
 	init_GameInfo();
-	init_prompt_s();
+	init_Prompts();
+	init_Game();
+	init_Players();
+	init_Session();
 }
 void Controller::init_Game() {
 	ttt.setDividerDouble();
-	gameState = GameState::GAME_PENDING;
+	gamePlay_DrawGame();
+	setGameState(GameState::State::GAME_PENDING);
 }
 void Controller::init_GameInfo() {
-	gameInfoPos.setV(ttt.getLnieAfterGrid());
-	gameInfoPos.setH(0);
-	gameInfoPos.setVlen(2);
-	gameInfoPos.setHlen(cMaxGameInfoChars);
-
-	for (auto i = 0; i < cMaxGameInfoChars; i++)
-		gameInfoBlankingStr.push_back(' ');
+	gameInfoBlock.setV(ttt.getLineAfterGrid());
+	gameInfoBlock.setH(0);
+	gameInfoBlock.setVlen(2);
+	gameInfoBlock.setHlen(cMaxGameInfoChars);
+	gameInfoBlock.fillBlankingStr(cMaxGameInfoChars);
+	gameInfoBlock.blank();
+	
+	gamePlayInfoBlock.setV(gameInfoBlock.getLineAfter());
+	gamePlayInfoBlock.setH(0);
+	gamePlayInfoBlock.setVlen(2);
+	gamePlayInfoBlock.setHlen(cMaxGameInfoChars);
+	gamePlayInfoBlock.fillBlankingStr(cMaxGamePlayInfoChars);
+	gamePlayInfoBlock.blank();
 }
 void Controller::init_Players()
 {
@@ -125,40 +144,54 @@ void Controller::init_Players()
 	players[0].setSymbol(PLAYER_NUM1_DEFAULT_SYMBOL);
 	players[1].setSymbol(PLAYER_NUM2_DEFAULT_SYMBOL);
 }
-void Controller::init_prompt_s() {
-	//Set up blanking string for user input
-	for (auto i = 0; i < cMaxUserInputChars; i++)
-		inputprompt_BlankingStr.push_back(' ');
+void Controller::init_Prompts() {
+	//Session prompts
+	sessionInfoBlock.setV(gameInfoBlock.getLineAfter());
+	sessionInfoBlock.setH(0);
+	sessionInfoBlock.setVlen(1);
+	sessionInfoBlock.setHlen(cMaxSessionInfoChars);
+	sessionInfoBlock.fillBlankingStr(cMaxUserInputChars);
+	sessionInfoBlock.blank();
 	
-	//Session info prompt_s
-	sessionInputPos.setV(gameInfoPos.getLineAfter());
-	sessionInputPos.setH(0);
-	sessionInputPos.setVlen(1);
-	sessionInputPos.setHlen(cMaxUserInputChars);
-	
-	//Get player name prompt_s
-	playerNameInputPos.push_back(Utility::ConsolePos()); //input pos for player 1 name prompt_
-	playerNameInputPos.push_back(Utility::ConsolePos()); //input pos for player 2 name prompt_
-	playerNameInputPos[cPlayerNumOne].setV(sessionInputPos.getLineAfter());
-	playerNameInputPos[cPlayerNumOne].setH(0);
-	playerNameInputPos[cPlayerNumOne].setVlen(1);
-	playerNameInputPos[cPlayerNumOne].setHlen(cMaxUserInputChars);
-	playerNameInputPos[cPlayerNumTwo].setV(playerNameInputPos[cPlayerNumOne].getLineAfter());
-	playerNameInputPos[cPlayerNumTwo].setH(0);
-	playerNameInputPos[cPlayerNumTwo].setVlen(1);
-	playerNameInputPos[cPlayerNumTwo].setHlen(cMaxUserInputChars);
+	//Player name prompts
+	playerNamePromptBlock.push_back(util_console::ConsoleTextBlock()); //input pos for player 1 name prompt
+	playerNamePromptBlock.push_back(util_console::ConsoleTextBlock()); //input pos for player 2 name prompt
+	playerNamePromptBlock[cPlayerNumOne].setV(sessionInfoBlock.getLineAfter());
+	playerNamePromptBlock[cPlayerNumOne].setH(0);
+	playerNamePromptBlock[cPlayerNumOne].setVlen(1);
+	playerNamePromptBlock[cPlayerNumOne].setHlen(cMaxUserInputChars);
+	playerNamePromptBlock[cPlayerNumOne].fillBlankingStr(cMaxUserInputChars);
+	playerNamePromptBlock[cPlayerNumOne].blank();
 
-	//Post game prompt_s
-	postGameInputPos.setV(gameInfoPos.getLineAfter());
-	postGameInputPos.setH(0);
-	postGameInputPos.setVlen(4);
-	postGameInputPos.setHlen(cMaxUserInputChars);
+	playerNamePromptBlock[cPlayerNumTwo].setV(playerNamePromptBlock[cPlayerNumOne].getLineAfter());
+	playerNamePromptBlock[cPlayerNumTwo].setH(0);
+	playerNamePromptBlock[cPlayerNumTwo].setVlen(1);
+	playerNamePromptBlock[cPlayerNumTwo].setHlen(cMaxUserInputChars);
+	playerNamePromptBlock[cPlayerNumTwo].fillBlankingStr(cMaxUserInputChars);
+	playerNamePromptBlock[cPlayerNumTwo].blank();
+
+	//Post game prompts
+	postGamePromptBlock.setV(gameInfoBlock.getLineAfter());
+	postGamePromptBlock.setH(0);
+	postGamePromptBlock.setVlen(4);
+	postGamePromptBlock.setHlen(cMaxUserInputChars);
+	postGamePromptBlock.fillBlankingStr(cMaxUserInputChars);
+	postGamePromptBlock.blank();
+
+	//Exit msg prompt
+	exitMsgBlock.setV(gameInfoBlock.getLineAfter());
+	exitMsgBlock.setH(0);
+	exitMsgBlock.setVlen(1);
+	exitMsgBlock.setHlen(cMaxUserInputChars);
+	exitMsgBlock.fillBlankingStr(cMaxUserInputChars);
+	exitMsgBlock.blank();
+
 }
 void Controller::init_Session() {
-	sessionState = SessionState::SESSION_PENDING;
-	sessionNum = 0;
+	setSession_State(SessionState::State::SESSION_REQUEST_NEW);
+	gameNum = 0;
 }
-void Controller::init_Utility() {
+void Controller::init_util_console() {
 	utility.randomSeed();
 }
 void Controller::print_CurrentPlayerName() {
@@ -166,43 +199,132 @@ void Controller::print_CurrentPlayerName() {
 	std::cout << "( " << players[static_cast<unsigned int>(currentPlayer)].getSymbol() << " )";
 }
 void Controller::print_GameInfo() {
-	utility.cursorTo(gameInfoPos.getV(), gameInfoPos.getH());
-	utility.storeCursorPos();
-	std::cout << gameInfoBlankingStr;
-	utility.restoreStoredCursorPos();
+	gameInfoBlock.blank();
+	std::cout << "Game " << gameNum << "  ";
 	switch (gameState) {
-	case GameState::GAME_PENDING:
+	case GameState::State::GAME_PENDING:
 		std::cout << "NEW GAME!!!\n";
 		break;
-	case GameState::GAME_ABANDONNED:
+	case GameState::State::GAME_CANCELLED:
 		std::cout << "Game Cancelled\n";
 		break;
-	case GameState::GAME_WON:
+	case GameState::State::GAME_WON:
 		std::cout << players[winner].getName() << " won!!!\n";
 		break;
-	case GameState::GAME_TIED:
+	case GameState::State::GAME_TIED:
 		std::cout << "Bummer, it's a tie\n";
 		break;
 	default:
 		break;
 	}
 }
+void Controller::printPlayerInfo(unsigned int playerNum){
+	playerNamePromptBlock[playerNum].blank();
+	std::cout << players[playerNum].getName() << " is Player" << playerNum + 1 << " ( " << players[playerNum].getSymbol() << "s )";
+}
+void Controller::printSessionInfo() {
+	sessionInfoBlock.blank();
+	switch (sessionState) {
+	case SessionState::State::SESSION_PENDING:
+
+		break;
+	case SessionState::State::SESSION_ONE_PLAYER:
+		std::cout << "1 Player vs Com";
+		break;
+	case SessionState::State::SESSION_TWO_PLAYERS:
+		std::cout << "2 Players";
+		break;
+	case SessionState::State::SESSION_AUTOMATED:
+		std::cout << "Automated Play";
+		break;
+	case SessionState::State::SESSION_REQUEST_NEW:
+
+		break;
+	case SessionState::State::SESSION_OVER:
+
+		break;
+	default:
+		break;
+
+	}
+}
+void Controller::prompt_AutomatedSessionInterrupted() {
+	if (prompt_GetAsyncInput()) {
+		gamePlay_EndCurrentGame();
+		setSession_State(SessionState::State::SESSION_REQUEST_NEW);
+	}
+}
+void Controller::prompt_ExitMsg() {
+	postGamePromptBlock.blank();
+	exitMsgBlock.blank();
+	std::cout << "So long. Thanks for playing!\n\n";
+}
+bool Controller::prompt_GetAsyncInput() {
+	//Peek first, if char there read it else return false
+	//std::cin >> std::ws;  // eat up any leading white spaces
+	if (_kbhit()) {
+		prompt_SetUserEntryFromAlphaKeyCode(_getch());
+		prompt_ProcessInput(); //ignore whether a command was found
+		return true; //return true regardless of whether the key is a command key
+	}
+	return false;
+}
+void Controller::prompt_NewSessionType() {
+	int numPlayers = 99;	//ensures user prompt_
+	sessionInfoBlock.blank();
+	std::cout << "How many players? (0, 1, 2) ";
+	utility.storeCursorPos();
+	while (numPlayers > 2) {
+		numPlayers = _getch() - 48;
+		utility.restoreStoredCursorPos();
+	}
+	if (numPlayers == 0) setSession_TypeZeroPlayer();
+	else setSession_TypeOneOrTwoPlayers(numPlayers);
+}
+void Controller::prompt_NextMove() {
+	gameInfoBlock.blank();
+	print_CurrentPlayerName(); std::cout << "'s move. Enter cell number...";
+	utility.storeCursorPos();
+	while (1) {
+		if (prompt_SetUserEntryFromAlphaNumKeyCode(_getch())) break;
+		utility.restoreStoredCursorPos();
+	}
+}
+void Controller::prompt_PlayerName(unsigned int playerNum) {
+	if (playerNum > cPlayerNumTwo) return;
+	playerNamePromptBlock[playerNum].blank();
+	std::cout << "Enter Player" << playerNum + 1 << " name ( " << players[playerNum].getSymbol() << " ): ";
+	utility.storeCursorPos();
+	std::string inputStr;
+	while(1){
+		std::cin >> std::ws;  // eat up any leading white spaces
+		std::cin >> inputStr;
+		utility.restoreStoredCursorPos();
+		if (inputStr.size() > 0) {
+			//Name entered
+			players[playerNum].setName(inputStr);
+			printPlayerInfo(playerNum);
+			break;
+		}
+	}
+}
+void Controller::prompt_PostGame() {
+	//play another, change sides, new players, quit?
+	postGamePromptBlock.blank();
+	std::cout << "Play again(p)\nChange sides(c)\nNew players(n)\nQuit(q)";
+	utility.storeCursorPos();
+	while (1) {
+		if (prompt_SetUserEntryFromAlphaKeyCode(_getch())) break;
+		utility.restoreStoredCursorPos();	
+	}
+}
 bool Controller::prompt_ProcessInput() {
 	switch (userEntry) {
-	case 'a':
-	case 'A':
-		//Automated session 
-
-
-		gamePlay_EndCurrentGame();
-		setSession_State(SessionState::SESSION_OVER);
-		setSession_TypeZeroPlayer();
-		break;
 	case 'b':
 	case 'B':
 		//end current game, change sides
 		gamePlay_EndCurrentGame();
-		setSession_State(SessionState::SESSION_OVER);
+		setSession_State(SessionState::State::SESSION_OVER);
 		std::cout << "ERROR!! Cant find valid entry\n";
 		break;
 	case 'c':
@@ -220,19 +342,23 @@ bool Controller::prompt_ProcessInput() {
 	case 'N':
 		//End this game, start new session
 		gamePlay_EndCurrentGame();
-		sessionState = SessionState::SESSION_REQUEST_NEW;
+		setSession_State(SessionState::State::SESSION_REQUEST_NEW);
 		break;
 	case 'p':
 	case 'P':
 		//Play another
 		gamePlay_EndCurrentGame();
-		setGameState(GameState::GAME_PENDING);
+		setGameState(GameState::State::GAME_PENDING);
+
+		//Todo print out player playerNamePromptBlock
+
+
 		break;
 	case 'q':
 	case 'Q':
 		//End this game, End this session
 		gamePlay_EndCurrentGame();
-		setSession_State(SessionState::SESSION_OVER);
+		setSession_State(SessionState::State::SESSION_OVER);
 		break;
 	case 'x':
 	case 'X':
@@ -255,157 +381,6 @@ bool Controller::prompt_ProcessInput() {
 	}
 	return true;
 }
-void Controller::run(){
-	gamePlay_DrawGame();
-	setSession_State(SessionState::SESSION_REQUEST_NEW);
-	while (!isSessionOver()){
-		//Session loop
-		if(isSessionRequestNew()) prompt_NewSessionType();
-		while (1) {
-			//Automated play loop
-			gamePlay_NewGame();
-			if (isGameActive()) {
-				ttt.blank();
-				gamePlay_RandomizeCurrentPlayer();
-			}
-			while (isGameActive()) {
-				//Game loop
-				gamePlay_NextMove();
-				if (isSessionAutomated()) {
-					if (prompt_GetAsyncInput()) {
-						gamePlay_EndCurrentGame();
-						setSession_State(SessionState::SESSION_REQUEST_NEW);
-					}
-				}
-				//End of game loop
-			}
-			if (isSessionAutomated()) setGameState(GameState::GAME_PENDING);
-			if (isGamePending()) continue;
-			else break;
-			//End of automated play loop
-		}
-		if (isSessionOver()) break;
-			
-		//Todo Show cumulative Scores, 
-
-		while (1) {
-			prompt_PostGame(); //Play another, change sides, new players, quit?
-			if (prompt_ProcessInput()) {
-				prompt_ClearPostGameText();
-				break;
-			}
-		}
-		//Todo: Save score history for each player?
-
-		if (isSessionOver()) break;
-	}
-	std::cout << "Thanks for playing\n";
-}
-void Controller::setSession_State(Controller::SessionState newSessionState) {
-	if ((newSessionState != sessionState) 
-		&& ((newSessionState == SessionState::SESSION_ONE_PLAYER)
-			|| (newSessionState == SessionState::SESSION_TWO_PLAYERS)
-			|| (newSessionState == SessionState::SESSION_AUTOMATED)
-			)
-		) sessionNum++;
-	sessionState = newSessionState;
-}
-void Controller::setSession_TypeOneOrTwoPlayers(const unsigned int numPlayers) {
-	//1 & 2 player sessions both have humans as player[0]
-	sessionState = SessionState::SESSION_ONE_PLAYER;
-	players[cPlayerNumOne].setHuman();
-	prompt_PlayerName(cPlayerNumOne);
-	if (numPlayers == 1) players[cPlayerNumTwo].setPlayer(cComPlayer, cPlayer2DefaultName);
-	else {
-		//2 players
-		sessionState = SessionState::SESSION_TWO_PLAYERS;
-		players[cPlayerNumTwo].setHuman();
-		prompt_PlayerName(cPlayerNumTwo);
-	}
-}
-void Controller::setSession_TypeZeroPlayer(){
-	sessionState = SessionState::SESSION_AUTOMATED;
-	players[0].setPlayer(cComPlayer, cPlayer1DefaultName);
-	players[1].setPlayer(cComPlayer, cPlayer2DefaultName);
-}
-void Controller::prompt_ClearPostGameText() {
-	utility.cursorTo(postGameInputPos.getV(), postGameInputPos.getH()); 
-	for (auto i = 0; i < postGameInputPos.getVlen(); i++) {
-		std::cout << inputprompt_BlankingStr;
-		if (i != postGameInputPos.getVlen() - 1) std::cout << std::endl;
-	}
-}
-bool Controller::prompt_GetAsyncInput() {
-	//Peek first, if char there read it else return false
-	//std::cin >> std::ws;  // eat up any leading white spaces
-	if (_kbhit()) {
-		prompt_SetUserEntryFromAlphaKeyCode(_getch());
-		prompt_ProcessInput(); //ignore whether a command was found
-		return true; //return true regardless of whether the key is a command key
-	}
-	return false;
-}
-void Controller::prompt_NewSessionType() {
-	int numPlayers = 99;	//ensures user prompt_
-	utility.cursorTo(sessionInputPos.getV(), sessionInputPos.getH());
-	utility.storeCursorPos();
-	std::string howManyPlayersStr("How many players? (0, 1, 2) ");
-	while (numPlayers > 2) {
-		std::cout << howManyPlayersStr;
-		numPlayers = _getch() - 48;
-		utility.restoreStoredCursorPos();
-	}
-	std::cout << inputprompt_BlankingStr;
-	utility.restoreStoredCursorPos();
-	std::cout << numPlayers << " Players";
-	if (numPlayers == 0) setSession_TypeZeroPlayer();
-	else setSession_TypeOneOrTwoPlayers(numPlayers);
-}
-void Controller::prompt_NextMove() {
-	unsigned int inputCode;
-	utility.cursorTo(gameInfoPos.getV(), gameInfoPos.getH());
-	utility.storeCursorPos();
-	while (1) {
-		utility.restoreStoredCursorPos();
-		std::cout << inputprompt_BlankingStr;
-		utility.restoreStoredCursorPos();
-		print_CurrentPlayerName(); std::cout << "'s move. Enter cell number...";
-		inputCode = _getch();
-		if (prompt_SetUserEntryFromAlphaNumKeyCode(inputCode)) break;
-	}
-}
-void Controller::prompt_PlayerName(unsigned int playerNum) {
-	if (playerNum > cPlayerNumTwo) return;
-	std::string inputStr;
-	std::string enterNameStr("Enter Player" + std::to_string(playerNum + 1) + std::string(" name ( ") + players[playerNum].getSymbol() + " ): ");
-	utility.cursorTo(playerNameInputPos[playerNum].getV(), playerNameInputPos[playerNum].getH());
-	utility.storeCursorPos();
-	while(1){
-		std::cout << enterNameStr;
-		std::cin >> std::ws;  // eat up any leading white spaces
-		std::cin >> inputStr;
-		utility.restoreStoredCursorPos();
-		if (inputStr.size() > 0) {
-			//Name entered
-			std::cout << inputprompt_BlankingStr;
-			utility.restoreStoredCursorPos();
-			players[playerNum].setName(inputStr);
-			std::cout << players[playerNum].getName() << " is Player" << playerNum + 1 << " ( " << players[playerNum].getSymbol() << "s )";
-			break;
-		}
-	}
-}
-void Controller::prompt_PostGame() {
-	//play another, change sides, new players, quit?
-	utility.cursorTo(postGameInputPos.getV(), postGameInputPos.getH());
-	utility.storeCursorPos();
-	prompt_ClearPostGameText();
-	utility.restoreStoredCursorPos();
-	std::cout << "Play again(p)\nChange sides(c)\nNew players(n)\nQuit(q)";
-	while (1) {
-		if (prompt_SetUserEntryFromAlphaKeyCode(_getch())) break;
-	}
-}
 bool Controller::prompt_SetUserEntryFromCellNum(unsigned int cellNum) { 
 	if (cellNum < ttt.GetNumCells()) {
 		userEntry = cellNum + 48;
@@ -426,6 +401,88 @@ bool Controller::prompt_SetUserEntryFromAlphaNumKeyCode(char keyCode) {
 		return true;
 	}
 	return false;
+}
+void Controller::run(){
+	while (!isSessionOver()){
+		//Session loop
+		if(isSessionRequestNew()) prompt_NewSessionType();
+		while (1) {
+			//Automated play loop
+			gamePlay_NewGame();
+			while (isGameActive()) {
+				//Game loop
+				gamePlay_NextMove();
+				if (isSessionAutomated()) prompt_AutomatedSessionInterrupted();
+				//End of game loop
+			}
+			if (isSessionAutomated()) setGameState(GameState::State::GAME_PENDING);
+			if (isGamePending()) continue;
+			else break;
+			//End of automated play loop
+		}
+		if (isSessionOver()) break;
+			
+		//Todo Show cumulative Scores, 
+
+		while (1) {
+			prompt_PostGame(); //Play another, change sides, new players, quit?
+			if (prompt_ProcessInput()) {
+				postGamePromptBlock.blank();
+				break;
+			}
+		}
+		//Todo: Save score history for each player?
+
+		if (isSessionOver()) break;
+	}
+	prompt_ExitMsg();
+}
+void Controller::setGameState(GameState::State newGameState) {
+	gameState.setState(newGameState);
+	switch (gameState) {
+	case GameState::State::GAME_ACTIVE:
+		gameResult.setOutcome(Outcomes::eUndefined);
+		break;
+	case GameState::State::GAME_TIED:
+		gameResult.setSessionNum(gameNum);
+		gameResult.setOutcome(Outcomes::eTie);
+		break;
+	case GameState::State::GAME_WON:
+		gameResult.setSessionNum(gameNum);
+		gameResult.setOutcome(Outcomes::eWin);
+		break;
+	default:
+		break;
+	}
+}
+void Controller::setSession_State(SessionState::State newSessionState) {
+	if ((newSessionState != sessionState) 
+		&& (   (newSessionState == SessionState::State::SESSION_ONE_PLAYER)
+			|| (newSessionState == SessionState::State::SESSION_TWO_PLAYERS)
+			|| (newSessionState == SessionState::State::SESSION_AUTOMATED)
+			)
+		) sessionNum++;
+	sessionState.setState(newSessionState);
+	printSessionInfo();
+}
+void Controller::setSession_TypeOneOrTwoPlayers(const unsigned int numPlayers) {
+	if (numPlayers > cMaxPlayers) return;
+	else if (numPlayers == 1) setSession_State(SessionState::State::SESSION_ONE_PLAYER);
+	else setSession_State(SessionState::State::SESSION_TWO_PLAYERS);
+	//1 & 2 player sessions both have humans as player[0]
+	players[cPlayerNumOne].setHuman();
+	prompt_PlayerName(cPlayerNumOne);
+	if (numPlayers == 1) players[cPlayerNumTwo].setPlayer(cComPlayer, cPlayer2DefaultName);
+	else {
+		//2 players
+		players[cPlayerNumTwo].setHuman();
+		prompt_PlayerName(cPlayerNumTwo);
+	}
+}
+void Controller::setSession_TypeZeroPlayer(){
+	setSession_State(SessionState::State::SESSION_AUTOMATED);
+	players[0].setPlayer(cComPlayer, cPlayer1DefaultName);
+	players[1].setPlayer(cComPlayer, cPlayer2DefaultName);
 }
 void Controller::strategy_Advanced() {
 	//Todo: replace this code with Advanced strategy_
@@ -496,6 +553,7 @@ bool Controller::strategy_MakeTwoInARow() {
 void Controller::strategy_NextMoveFromCom() {
 	//strategy_Novice();
 	strategy_Intermediate();
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
 void Controller::strategy_Novice() {
 	const std::vector<unsigned int> emptyCells = std::move(ttt.getEmptyCells());

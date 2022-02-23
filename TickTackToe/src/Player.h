@@ -2,14 +2,14 @@
 #include <iostream>
 #include <vector>
 
-#include "GameResult.h"
+#include "PlayerResult.h"
 
 class Player {
 private:
 	bool com;
 	std::string name;
-	const unsigned int cMaxResults = 10;
-	std::vector<GameResult> results;
+	const unsigned int cMaxResults = 100;
+	std::vector<PlayerResult> results;
 	char symbol;
 
 public:
@@ -18,9 +18,9 @@ public:
 	std::string getName() { return name; }
 	
 	bool canPlay() { return results_addNewRecord(); }
-	void enterResult(GameResult r);
-	GameResult getLastResult();
-	GameResult getResultFromSession(unsigned int sessNum);
+	void enterPlayerResult(PlayerResult r);
+	PlayerResult getLastPlayerResult();
+	PlayerResult getPlayerResultFromSession(unsigned int sessNum);
 	char getSymbol() { return symbol; }
 	bool isCom() { return com; }
 	bool results_addNewRecord();

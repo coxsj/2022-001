@@ -1,10 +1,14 @@
 #pragma once
 #include "Outcomes.h"
 
-class GameResult
+class PlayerResult
 {
 public:
-	GameResult() : gameNum(0), outcome(Outcomes::eUndefined), duration_ms(0) {}
+	
+	PlayerResult(unsigned int newSessionNum=0, Outcomes newOutcome=Outcomes::eUndefined, long long newDuration_ms=0) : 
+		gameNum(newSessionNum), 
+		outcome(newOutcome), 
+		duration_ms(newDuration_ms) {}
 
 	Outcomes getOutcome() { return outcome; }
 	unsigned int getSessionNum() { return gameNum; }
